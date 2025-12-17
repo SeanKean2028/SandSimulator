@@ -1,0 +1,11 @@
+12/16/25
+    - Worked on Importing the various Libraries needed for this project
+    - Linked SDL, GLEW, and GLM
+    - Created the hello world window
+    - Started planning file structure, and organization
+12/17/25
+    - Implemented Graph.h
+    - draws a graph
+    - Implemented a graph, and cell class
+    - Draws Sand
+    - Changes position in the mat4 model

@@ -9,8 +9,13 @@
 
 //Importing Textures
 #include <SOIL.h>
-int main(int argc, char* argv[])
-{
+
+//Sean Made Headers
+#include "Mesh.h"
+#include "Shader.h"
+#include "Grid.h"
+int SetUpWindow(SDL_Window* window, SDL_GLContext glContext) {
+
     if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
         std::cerr << SDL_GetError() << std::endl;
     }
@@ -18,7 +23,7 @@ int main(int argc, char* argv[])
     int n = SDL_GetNumVideoDrivers();
     for (int i = 0; i < n; i++)
         std::cout << "  " << SDL_GetVideoDriver(i) << "\n";
-   
+
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::cerr << "SDL init failed: " << SDL_GetError() << std::endl;
         return -1;
@@ -33,11 +38,7 @@ int main(int argc, char* argv[])
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     // SDL3 window creation (flags are last!)
-    SDL_Window* window = SDL_CreateWindow(
-        "SDL3 + GLEW + OpenGL",
-        800, 600,
-        SDL_WINDOW_OPENGL
-    );
+
 
     if (!window) {
         std::cerr << "Window creation failed: "
@@ -46,8 +47,7 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    // Create GL context
-    SDL_GLContext glContext = SDL_GL_CreateContext(window);
+
     if (!glContext) {
         std::cerr << "GL context creation failed: "
             << SDL_GetError() << std::endl;
@@ -68,6 +68,61 @@ int main(int argc, char* argv[])
 
     std::cout << "OpenGL Version: "
         << glGetString(GL_VERSION) << std::endl;
+}
+float Box[] = {
+    // bottom-left       Pos, Normals, TextureCoords
+    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+    // bottom-right
+     0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   1.0f, 0.0f,
+     // top-right
+      0.5f,  0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
+      // top-left
+      -0.5f,  0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 1.0f
+};
+int BoxIndices[] = {
+    0, 1, 2,
+    2, 3, 0
+};
+
+int main(int argc, char* argv[])
+{
+    //--- SetUp Window
+    int resX = 1000; int resY = 1000;
+    SDL_Window* window;
+    window = SDL_CreateWindow(
+        "SDL3 + GLEW + OpenGL",
+        resX, resY,
+        SDL_WINDOW_OPENGL
+    );
+    // ---
+    // 
+    // Create GL context
+    SDL_GLContext context = {};
+    context = SDL_GL_CreateContext(window);
+
+    int errorId = SetUpWindow(window, context);
+    if (errorId == -1) {
+        return -1;
+    }
+    // ---
+
+    //--- Shaders
+    VertexShader boxVertex("Shaders/boxVertex.glsl", GL_VERTEX_SHADER);
+    FragmentShader boxFragment("Shaders/boxFragment.glsl", GL_FRAGMENT_SHADER);
+    
+    ShaderProgram boxShader (boxVertex, boxFragment);
+    // ---
+    
+    //--- Meshes
+    boxShader.use();
+    glm::mat4 model = glm::mat4(1.0f);
+    boxShader.setMat4("model", model);
+    boxShader.setVec3("color", glm::vec3(1, 0, 0));
+    Mesh boxMesh(Box, sizeof(Box), BoxIndices, sizeof(BoxIndices), boxShader);
+
+    Grid grid(resX, resY, 100);
+    grid.CreateCell(glm::vec2(2,2), sand);
+    // ---
     bool running = true;
     SDL_Event event;
 
@@ -76,14 +131,27 @@ int main(int argc, char* argv[])
             if (event.type == SDL_EVENT_QUIT)
                 running = false;
         }
+        //Enable Blending for grid
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glViewport(0, 0, 800, 600);
+        glViewport(0, 0, resX, resY);
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        glDisable(GL_CULL_FACE);
+        grid.Draw();
+        
+        //boxMesh.DrawMesh();
+
         SDL_GL_SwapWindow(window);
     }
-    SDL_GL_DestroyContext(glContext);
+
+    boxShader.Delete();
+    boxMesh.Delete();
+    grid.Delete();
+
+    SDL_GL_DestroyContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
