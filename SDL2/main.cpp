@@ -14,6 +14,7 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include "Grid.h"
+#include "Circle.h"
 int SetUpWindow(SDL_Window* window, SDL_GLContext glContext) {
 
     if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
@@ -121,7 +122,11 @@ int main(int argc, char* argv[])
     Mesh boxMesh(Box, sizeof(Box), BoxIndices, sizeof(BoxIndices), boxShader);
 
     Grid grid(resX, resY, 100);
-    grid.CreateCell(glm::vec2(2,2), sand);
+    grid.CreateCell(glm::vec2(2,1), sand);
+    grid.CreateCell(glm::vec2(2, 2), sand);
+    grid.CreateCell(glm::vec2(2, 3), sand);
+
+    Circle circle(glm::vec2(0,0), 0.25f, 55);
     // ---
     bool running = true;
     SDL_Event event;
@@ -131,6 +136,9 @@ int main(int argc, char* argv[])
             if (event.type == SDL_EVENT_QUIT)
                 running = false;
         }
+        float x, y;
+        SDL_GetMouseState(&x, &y);
+        cout << "Mouse at: " << x << "," << y << endl;
         //Enable Blending for grid
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -138,10 +146,9 @@ int main(int argc, char* argv[])
         glViewport(0, 0, resX, resY);
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-
         glDisable(GL_CULL_FACE);
         grid.Draw();
-        
+        circle.DrawCircle(glm::vec2(x, y), glm::vec2(resX, resY));
         //boxMesh.DrawMesh();
 
         SDL_GL_SwapWindow(window);

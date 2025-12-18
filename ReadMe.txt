@@ -19,6 +19,7 @@ File Structure
         -Model
             -Shader.h
             -Mesh.h
+            -Circle.h
         -Camera
     Util: for texture importing
         -SOIL.c

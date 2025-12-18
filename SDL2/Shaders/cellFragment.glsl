@@ -5,7 +5,7 @@ in vec2 Tex;
 
 out vec4 FragColor;
 
-uniform vec3 color = vec3(0.97f, 0.98f, 0.62f);
+uniform vec4 color = vec4(0.97f, 0.98f, 0.62f, 1);
 void main(){
-  FragColor = vec4(color,1);
+  FragColor = color;
 }
