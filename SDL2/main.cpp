@@ -126,19 +126,30 @@ int main(int argc, char* argv[])
     grid.CreateCell(glm::vec2(2, 2), sand);
     grid.CreateCell(glm::vec2(2, 3), sand);
 
-    Circle circle(glm::vec2(0,0), 0.25f, 55);
+    Circle circle(glm::vec2(0,0), 0.1f, 100);
     // ---
     bool running = true;
     SDL_Event event;
 
+    bool input = false;
     while (running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT)
                 running = false;
+
+            if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+                grid.CreateCellsFromCircle(circle);
+                input = true;
+            }
+            else if (input == true) {
+                grid.CreateCellsFromCircle(circle);
+            }
+            if (event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
+                input = false;
+            }
         }
         float x, y;
         SDL_GetMouseState(&x, &y);
-        cout << "Mouse at: " << x << "," << y << endl;
         //Enable Blending for grid
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

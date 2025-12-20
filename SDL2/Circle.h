@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <iostream>
 #include <cmath>
 #include <glm.hpp>
@@ -9,23 +9,26 @@
 using namespace std;
 
 class Circle {
-	float radius;
+	//Screen Space
 	int amountOfSteps;
 	float anglePerSteps;
-	glm::vec2 center;
 	
+	//OpenGL Screen Space
 	vector<float> vertices;
 	vector<int> indices;
 	const double PI = atan(1) * 4;
 	glm::mat4 model;
 	Mesh circleMesh;
 	ShaderProgram shaderProgram;
+
+
 	//Set's values center, radius, steps, and angleAmountPerSteps, calls Generate Circle
 public :
+	float radius;
+	glm::vec2 pos;
 	Circle(glm::vec2 _center, float _radius, float _steps) {
 		radius = _radius;
 		amountOfSteps = _steps;
-		center = _center;
 		
 		anglePerSteps = (2 * PI)/_steps;
 		GenerateCircle();
@@ -47,11 +50,11 @@ public :
 	//Sets vertices, and indices generating using the fan method
 	void GenerateCircle() {
 		//Add Center
-		AddVertex(center, glm::vec2(0.5f, 0.5f));
+		AddVertex(glm::vec2(0.0f,0.0f), glm::vec2(0.5f, 0.5f));
 		//Add all Vertices
 		for (int i = 0; i < amountOfSteps; i++) {
 			double theta = anglePerSteps * i;
-			glm::vec2 pos = glm::vec2(center.x +  radius * cos(theta), center.y + radius * sin(theta));
+			glm::vec2 pos = glm::vec2(radius * cos(theta),radius * sin(theta));
 			glm::vec2 texCoords = glm::vec2(0.5f + 0.5f * cos(theta), 0.5f + 0.5f * sin(theta));
 			AddVertex(pos, texCoords);
 		}
@@ -68,14 +71,18 @@ public :
 		circleMesh = Mesh(vertices.data(), vertices.size(), indices.data(), indices.size(), shaderProgram);
 	}
 	void DrawCircle(glm::vec2 mousePos, glm::vec2 resolution) {
-		float ndcX = (2.0f * mousePos.x / resolution.x) - 1.0f;
-		float ndcY = 1.0f - (2.0f * mousePos.y / resolution.y);
+		pos.x = (2.0f * mousePos.x / resolution.x) - 1.0f;
+		pos.y = 1.0f - (2.0f * mousePos.y / resolution.y);
 
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(ndcX, ndcY, 0.0f));
+		glm::mat4 model = glm::translate(
+			glm::mat4(1.0f),
+			glm::vec3(pos, 0.0f)
+		);
+
 		shaderProgram.use();
-		
 		shaderProgram.setMat4("model", model);
-		shaderProgram.setVec4("color", glm::vec4(1,0,0,0.2f));
+		shaderProgram.setVec4("color", glm::vec4(1, 0, 0, 0.2f));
+
 		circleMesh.DrawMesh();
 	}
 	void Delete() {
