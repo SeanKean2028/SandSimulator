@@ -1,0 +1,40 @@
+Todo:
+    
+    -Organization/Refactoring
+        - Refactor all classes to have a .h boilerplate, and a .cpp implementation
+        - Minimize main for scaling
+        - Continue to learn more about coding space structure, and formatting
+
+    - Easy stuff
+        - Cell Spawning Type Switching
+            - Input
+            - Text
+            - Gui
+
+        - Clean code up
+            - Grid.h, cell class
+
+        - Add Cell colors
+            - Wood
+            - Sand
+            - Fire
+
+    - Cell Physics
+        - Velocity
+
+    - Cell Types
+        - Fire
+        - Water
+        - Steam
+ 
+    - Player
+        - Gravity Physics
+        - Collision with Cells
+        - Movement
+
+    - Lighting 
+        - Fire Makes a point light that flickers
+    
+    - Post Processing
+        - Find cool effects
+    

@@ -1,3 +1,13 @@
+12/28/25
+    - Random Colors for variation in sand and wood
+    - Added some Colors to the struct to be picked randomly from
+12/27/25
+    - Fixed cell coloring per cell instead of per shader
+12/26/25
+    - Added a wood type cell to the program
+    - Refactored cell spawning to be called generically in update instead of in updateSand physics update
+    - Refactored cell spawning to be determined based on cell type
+    - Added a woodUpdate for physics implementation
 12/20/25
     - Refactored Graph.h: cell and grid class to share one vbo, ebo, and shader for all the sand cells
     - Refactored Cell circle spawning function to actually function
