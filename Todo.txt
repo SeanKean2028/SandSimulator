@@ -1,13 +1,12 @@
 Todo:
-    
     -Organization/Refactoring
-        - Refactor all classes to have a .h boilerplate, and a .cpp implementation
-        - Minimize main for scaling
+        - Refactor all classes to have a .h boilerplate, and a .cpp implementation DONE
+        - Minimize main for scaling DONE
         - Continue to learn more about coding space structure, and formatting
 
     - Easy stuff
         - Cell Spawning Type Switching
-            - Input
+            - Input DONE
             - Text
             - Gui
 
@@ -15,16 +14,22 @@ Todo:
             - Grid.h, cell class
 
         - Add Cell colors
-            - Wood
-            - Sand
-            - Fire
+            - Wood DONE
+            - Sand DONE
+            - Fire DONE
+            - Water DONE
 
     - Cell Physics
         - Velocity
 
     - Cell Types
-        - Fire
+        - Fire DONE
         - Water
+            - Bias in left right
+            - put out fire
+        - Sand
+            - put out fire
+            
         - Steam
  
     - Player
@@ -35,6 +40,8 @@ Todo:
     - Lighting 
         - Fire Makes a point light that flickers
     
+    -Lightning
+
     - Post Processing
         - Find cool effects
     

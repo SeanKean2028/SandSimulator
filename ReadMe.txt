@@ -6,7 +6,7 @@ Purpose:
     The Purpose of this project is to hone my programming skills in c++; learn about low level programming -for
     the increase in creative freedom-
     learn more about OpenGL and Computer
-    Graphics; simulate basic physics; create a
+    Graphics; simulate basic physics; create a Game I can sell for $1.00
 Programming Fundamentals:
     -I seek to improve my aptitude in soft skills such as: 
         Organization, Time management, Self set deadlines, and 

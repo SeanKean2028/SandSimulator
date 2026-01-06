@@ -12,10 +12,11 @@ int main(int argc, char* argv[])
         name, resX, resY,
         SDL_WINDOW_OPENGL
     };
-    InputHandler inputHandler();
+    //InputHandler inputHandler();
     Game game{};
-    cout << "PresetUp \n";
     InputHandler::Instance()->init(&game);
     game.init(gameInitArgs);
+    game.update();
+    InputHandler::Instance()->clean();
     return 0;
 }

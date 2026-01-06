@@ -8,6 +8,10 @@
 #include "Shader.h"
 using namespace std;
 
+struct circleInitArgs {
+	float _radius;
+	float _steps;
+};
 class Circle {
 	//Screen Space
 	int amountOfSteps;
@@ -24,9 +28,9 @@ public :
 	float radius;
 	glm::vec2 pos;
 	Circle(){}
-	Circle(glm::vec2 _center, float _radius, float _steps);
-		
-	void init(glm::vec2 _center, float _radius, float _steps);
+	Circle(circleInitArgs);
+
+	void init(circleInitArgs initArgs);
 	//Helper function to add vertex to vertices list with only 4 parameter pos(vec2), texcoords(vec2)
 	void AddVertex(glm::vec2 pos, glm::vec2 texCoords);
 

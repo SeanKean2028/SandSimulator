@@ -1,18 +1,25 @@
 #version 330 core
 
-layout (location = 0) in vec3 pos;
-layout (location = 1) in vec3 normal;
-layout (location = 2) in vec2 tex;
+layout (location = 0) in vec3 aPos;
+layout (location = 3) in vec4 instanceModelRow0;
+layout (location = 4) in vec4 instanceModelRow1;
+layout (location = 5) in vec4 instanceModelRow2;
+layout (location = 6) in vec4 instanceModelRow3;
 
-uniform mat4 model = mat4(1.0f);
+layout (location = 7) in vec4 instanceColor;
+out vec4 vColor;
 
-out vec3 FragPos;
-out vec3 Normal;
-out vec2 Tex;
+void main()
+{
 
-void main(){
-   gl_Position = model * vec4(pos, 1.0);
-   Tex = tex;
-   Normal = normal;
-   FragPos = vec3(model * vec4(pos, 1.0));
+    mat4 instanceModel = mat4(
+        instanceModelRow0,
+        instanceModelRow1,
+        instanceModelRow2,
+        instanceModelRow3
+    );
+
+    gl_Position = instanceModel * vec4(aPos, 1.0);
+    
+    vColor = instanceColor;
 }

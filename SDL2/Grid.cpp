@@ -9,10 +9,9 @@
 #include "Shader.h"
 #include "Circle.h"
 #include "Grid.h"
+#include "Coordinate.h"
 using namespace std;
-
-
-
+#pragma region Cell Mesh Data
 vector<float> vertices = {
 
 	// bottom-left		
@@ -37,14 +36,12 @@ vector<float> vertices = {
 	  0.0f,  1.0f
 
 };
-
-
-
 vector<int> cellIndices{
 	0, 1, 2,
 	2, 3, 0
 };
-
+#pragma endregion
+#pragma region  Colors
 vector<glm::vec4> sandColors = {
 	glm::vec4(1, 0.992f, 0.592f, 1),
 	glm::vec4(1,1,1,1),
@@ -71,6 +68,20 @@ vector<glm::vec4> waterColors = {
 	glm::vec4(0.282f, 0.251f, 1,1),
 	glm::vec4(0,0.573f, 1,1)
 };
+vector<glm::vec4> ashColors = {
+	glm::vec4(0.31f, 0.271f, 0.259f, 1),
+	glm::vec4(0.388f, 0.125f, 0.125f,1),
+	glm::vec4(0.078f, 0.078f, 0.078f,1),
+	glm::vec4(0,0,0,1)
+};
+vector<glm::vec4> smokeColors = {
+	glm::vec4(0.31f, 0.271f, 0.259f, 0.25f),
+	glm::vec4(0.388f, 0.125f, 0.125f,0.1f),
+	glm::vec4(0.078f, 0.078f, 0.078f,0.3f),
+	glm::vec4(0,0,0,0.4f)
+};
+#pragma endregion
+#pragma region SharedCellMesh
 struct SharedCellMesh {
 	public: static Mesh* mesh;
 		  static ShaderProgram* shader;
@@ -79,32 +90,8 @@ struct SharedCellMesh {
 Mesh* SharedCellMesh::mesh = nullptr;
 ShaderProgram* SharedCellMesh::shader = nullptr;
 
-//Helper
-glm::ivec2 NdcToGrid(glm::vec2 ndc, int cellAmount) {
-	int gx = int((ndc.x + 1.0f) * 0.5f * cellAmount);
-	int gy = int((1.0f - ndc.y) * 0.5f * cellAmount);
-
-	if (gx < 0) gx = 0;
-	if (gy < 0) gy = 0;
-	if (gx >= cellAmount) gx = cellAmount - 1;
-	if (gy >= cellAmount) gy = cellAmount - 1;
-
-	return glm::ivec2(gx, gy);
-}
-glm::vec2 GridToNdc(glm::ivec2 grid, int cellAmount) {
-	float ndcX = (grid.x + 0.5f) * (2.0f / cellAmount) - 1.0f;
-	float ndcY = 1.0f - (grid.y + 0.5f) * (2.0f / cellAmount);
-	return { ndcX, ndcY };
-}
-glm::vec2 ScreenToNdc(glm::vec2 screen, glm::vec2 resolution) {
-	float ndcX = (2.0f * screen.x / resolution.x) - 1.0f;
-	float ndcY = 1.0f - (2.0f * screen.y / resolution.y);
-	return { ndcX, ndcY };
-}
-void ClampNdc(glm::vec2& ndc) {
-	ndc.x = glm::clamp(ndc.x, -1.0f, 1.0f);
-	ndc.y = glm::clamp(ndc.y, -1.0f, 1.0f);
-}
+#pragma endregion
+//Todo: Make own header for importing Random int, Random float etc..
 int Random(int _min, int _max) {
 	random_device rd;
 	mt19937 gen(rd());
@@ -112,16 +99,13 @@ int Random(int _min, int _max) {
 
 	return(dist(gen));
 }
+#pragma region Cell
 Cell::Cell(glm::vec2 gridPos, int _cellAmount, glm::vec2 cellSize, glm::vec2 _resolution, CellType type)
 {
 	gridPosition = gridPos;
-	size = cellSize;
-	resolution = _resolution;
 	cellType = type;
-	cellAmount = _cellAmount;
-	model = UpdatedModel(gridPos);
-
 	int random = -1;	
+	int random2 = 0;
 	switch (cellType) {
 		case sand:
 			random = Random(0, sandColors.size() - 1);
@@ -138,122 +122,28 @@ Cell::Cell(glm::vec2 gridPos, int _cellAmount, glm::vec2 cellSize, glm::vec2 _re
 		case water:
 			random = Random(0, waterColors.size() - 1);
 			color = waterColors[random];
+			random2 = Random(1, 2);
+			
+			if (random2 == 1)
+				random = -1;
+			else
+				random = 1;
 			break;
-
+		case ash:
+			random = Random(0, ashColors.size() - 1);
+			color = ashColors[random];
+			break;
+		case smoke:
+			random = Random(0, smokeColors.size() - 1);
+			color = smokeColors[random];
+			break;
 	}	
-}
-void Cell::init(glm::vec2 gridPos, int _cellAmount, glm::vec2 cellSize, glm::vec2 _resolution, CellType type) {
-	gridPosition = gridPos;
-	size = cellSize;
-	resolution = _resolution;
-	cellType = type;
-	cellAmount = _cellAmount;
-	model = UpdatedModel(gridPos);
-
-	int random = -1;
-	switch (cellType) {
-	case sand:
-		random = Random(0, sandColors.size() - 1);
-		color = sandColors[random];
-		break;
-	case wood:
-		random = Random(0, woodColors.size() - 1);
-		color = woodColors[random];
-		break;
-	case fire:
-		random = Random(0, fireColors.size() - 1);
-		color = fireColors[random];
-		break;
-	case water:
-		random = Random(0, waterColors.size() - 1);
-		color = waterColors[random];
-		break;
-	}
-}
-//Converts this->gridPosition to screenPosition
-glm::vec2 Cell::ScreenPosition() {
-	return glm::vec2((gridPosition * size) * 0.5f);	
-}
-
-//New pos = y+1, x, simulates the space right below our cell!
-glm::vec2 Cell::GravityPos() {
-	int nGridPosY = gridPosition.y + 1;
-	int nGridPosX = gridPosition.x;
-	if (nGridPosY >= cellAmount)   // STOP at bottom
-		return gridPosition;
-	return glm::vec2(nGridPosX, nGridPosY);
-}
-	
-//New positions = y+1, x+1; y+1, x-1; simulates the spreading affect of sand!
-
-vector<glm::vec2> Cell::GravityDispersalPos() {
-	vector<glm::vec2> _vec2;
-	int nGridPosY = gridPosition.y + 1;
-	if (nGridPosY >= cellAmount) return _vec2;
-
-	int nGridPosX1 = gridPosition.x + 1;
-	int nGridPosX2 = gridPosition.x - 1;
-
-	if (gridPosition.y < cellAmount - 1)
-		_vec2.push_back(glm::vec2(nGridPosX1, nGridPosY));
-	if (gridPosition.x > 0)
-		_vec2.push_back(glm::vec2(nGridPosX2, nGridPosY));
-
-	return _vec2;	
-}
-vector<glm::vec2> Cell::DispersalPos()
-{
-	vector<glm::vec2> _vec2;
-	//Generate Right
-	int nGridPosX = gridPosition.x + 1;
-	if (nGridPosX >= cellAmount) return _vec2;
-	_vec2.push_back(glm::vec2(nGridPosX, gridPosition.y));
-
-	//Generate Left
-	int nGridPosX2 = gridPosition.x - 1;
-	if (nGridPosX2 >= cellAmount) return _vec2;
-	_vec2.push_back(glm::vec2(nGridPosX2, gridPosition.y));
-	return _vec2;
-}
-glm::mat4 Cell::UpdatedModel(glm::vec2 newPos) {
-
-	int nGridPosY = newPos.y;
-	int nGridPosX = newPos.x;
-	
-	if (nGridPosY > cellAmount)
-		return glm::mat4(1.0f);
-
-	//Grid → Screen (center)
-	float cellPixelW = resolution.x / cellAmount;
-	float cellPixelH = resolution.y / cellAmount;
-
-	float screenX = (newPos.x + 0.5f) * cellPixelW;
-	float screenY = (newPos.y + 0.5f) * cellPixelH;
-	//Screen → NDC
-	float ndcX = (2.0f * screenX / resolution.x) - 1.0f;
-	float ndcY = 1.0f - (2.0f * screenY / resolution.y);
-	
-	float cellNdcW = 2.0f / cellAmount;
-	float cellNdcH = 2.0f / cellAmount;
-	
-	ndc = glm::vec2(ndcX, ndcY);
-	glm::mat4 model = glm::mat4(1.0f);
-	glm::vec3 translation = glm::vec3(ndcX, ndcY, 0);
-	
-	model = glm::translate(glm::mat4(1.0f), translation);
-	model = glm::scale(model, glm::vec3(cellNdcW, cellNdcH, 1.0f));
-	return model;
-}
-
-	
-void Cell::Draw() {
-	SharedCellMesh::shader->use();
-	SharedCellMesh::mesh->DrawMesh();
 }
 void Cell::Delete() {
 	SharedCellMesh::mesh->Delete();
 }
-
+#pragma endregion
+#pragma region Grid Mesh Data
 float GridVertices[] = {
 	-1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,    0.0f, 0.0f,
 	 1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,    1.0f, 0.0f,
@@ -264,64 +154,50 @@ int GridIndices[] = {
 	0, 1, 2,
 	2, 3, 0
 };
-
-	
+#pragma endregion 
+#pragma region Grid Initialization
 Grid::Grid() {
 }
 	
-Grid::Grid(int _resX, int _resY, int _cells) {
-
+Grid::Grid(GridInitArgs gridInitArgs) {
+	init(gridInitArgs);
+}
+void Grid::init(GridInitArgs gridInitArgs) {
 	//Set Resolution
-	resolution = glm::vec2(_resX, _resY);
+	resolution = glm::vec2(gridInitArgs._resX, gridInitArgs._resY);
 
 	//Set Cell Amount
-	cellAmount = _cells;
+	cellAmount = gridInitArgs._cells;
 	cellSize = glm::vec2(resolution.x / cellAmount, resolution.y / cellAmount);
 
 	vector<vector<Cell*>> temp(cellAmount, vector<Cell*>(cellAmount));
 	cells = temp;
-	
-	//Generate GridShader
-	VertexShader gridVertex("Shaders/gridVertex.glsl", GL_VERTEX_SHADER);	
-	FragmentShader gridFragment("Shaders/gridFragment.glsl", GL_FRAGMENT_SHADER);
 
-	glm::mat4 model = glm::mat4(1.0f);
+	// These vectors are used to collect data for the GPU upload every frame.
+	instanceModels.reserve(1000);
+	instanceColors.reserve(1000);
 
-	gridShader = ShaderProgram(gridVertex, gridFragment);
-	gridShader.use();
-	gridShader.setMat4("model", model);
-	gridShader.setVec4("params", glm::vec4(1, _cells, 0, 0));
-	gridShader.setVec4("color", glm::vec4(1, 0, 1, 0.25f));
-
-	//Generate CellShader
+	// Generate CellShader
 	VertexShader cellVertex("Shaders/cellVertex.glsl", GL_VERTEX_SHADER);
 	FragmentShader cellFragment("Shaders/cellFragment.glsl", GL_FRAGMENT_SHADER);
-	
-	if (!SharedCellMesh::shader)
-		SharedCellMesh::shader = new ShaderProgram(cellVertex, cellFragment);;
-	gridMesh = Mesh(GridVertices, sizeof(GridVertices), GridIndices, sizeof(GridIndices), gridShader);
-	
+	const size_t VERTEX_FLOAT_COUNT = 8; // 3 Pos + 3 Norm + 2 TexCoord
+	const size_t TOTAL_VERTICES = vertices.size() / VERTEX_FLOAT_COUNT; // Should be 4
+	const size_t VERTEX_BUFFER_SIZE_BYTES = vertices.size() * sizeof(float);
+	if (!SharedCellMesh::shader) {
+		SharedCellMesh::shader = new ShaderProgram(cellVertex, cellFragment);
+	}
+
 	if (!SharedCellMesh::mesh) {
 		SharedCellMesh::mesh = new Mesh(
-		vertices.data(), sizeof(vertices),
-		cellIndices.data(), sizeof(cellIndices),
-		*SharedCellMesh::shader
+			vertices.data(),
+			VERTEX_BUFFER_SIZE_BYTES,
+			cellIndices.data(), 
+			cellIndices.size(),
+			*SharedCellMesh::shader,true
 		);
 	}
-}
-void Grid::init(int _resX, int _resY, int _cells) {
 
-	//Set Resolution
-	resolution = glm::vec2(_resX, _resY);
-
-	//Set Cell Amount
-	cellAmount = _cells;
-	cellSize = glm::vec2(resolution.x / cellAmount, resolution.y / cellAmount);
-
-	vector<vector<Cell*>> temp(cellAmount, vector<Cell*>(cellAmount));
-	cells = temp;
-
-	//Generate GridShader
+	// Generate GridShader
 	VertexShader gridVertex("Shaders/gridVertex.glsl", GL_VERTEX_SHADER);
 	FragmentShader gridFragment("Shaders/gridFragment.glsl", GL_FRAGMENT_SHADER);
 
@@ -330,31 +206,18 @@ void Grid::init(int _resX, int _resY, int _cells) {
 	gridShader = ShaderProgram(gridVertex, gridFragment);
 	gridShader.use();
 	gridShader.setMat4("model", model);
-	gridShader.setVec4("params", glm::vec4(1, _cells, 0, 0));
+	gridShader.setVec4("params", glm::vec4(1, gridInitArgs._cells, 0, 0));
 	gridShader.setVec4("color", glm::vec4(1, 0, 1, 0.25f));
 
-	//Generate CellShader
-	VertexShader cellVertex("Shaders/cellVertex.glsl", GL_VERTEX_SHADER);
-	FragmentShader cellFragment("Shaders/cellFragment.glsl", GL_FRAGMENT_SHADER);
-
-	if (!SharedCellMesh::shader)
-		SharedCellMesh::shader = new ShaderProgram(cellVertex, cellFragment);;
 	gridMesh = Mesh(GridVertices, sizeof(GridVertices), GridIndices, sizeof(GridIndices), gridShader);
-
-	if (!SharedCellMesh::mesh) {
-		SharedCellMesh::mesh = new Mesh(
-			vertices.data(), sizeof(vertices),
-			cellIndices.data(), sizeof(cellIndices),
-			*SharedCellMesh::shader
-		);
-	}
 }
-
-void Grid::CreateCell(glm::vec2 pos, CellType type) {
+#pragma endregion
+#pragma region Cell Instantation
+Cell* Grid::CreateCell(glm::vec2 pos, CellType type) {
 	if (pos.x < 0 || pos.y < 0 || pos.x >= cellAmount || pos.y >= cellAmount)
-		return;
+		return nullptr;
 	if (cells[pos.y][pos.x] != nullptr)
-			return;
+			return nullptr;
 	Cell* cell = new Cell(
 		pos,
 		cellAmount,
@@ -366,27 +229,25 @@ void Grid::CreateCell(glm::vec2 pos, CellType type) {
 	if (cell->cellType == fire) {
 		if (cell->isSpreadedFire)
 		{
-			cout << "Cell \n";
 			cell->lifeTime = 15.0f;
-			return;
+			cell->active = true;
+			cells[(int)pos.y][(int)pos.x] = cell;
+			return cell;
 		}
 		float random = Random(11, 90);
 		float time = random / 100;
 		cell->lifeTime = time;
+		cells[(int)pos.y][(int)pos.x] = cell;
 	}
-}
-Cell* Grid::CreateFireCell(glm::vec2 pos) {
-	Cell* cell = new Cell(
-		pos,
-		cellAmount,
-		cellSize,
-		resolution,
-		fire
-	);
-	cells[(int)pos.y][(int)pos.x] = cell;
-	float random = Random(22, 180);
-	float time = random / 100;
-	cell->lifeTime = time;
+	else if (cell->cellType == smoke) {
+		float random = Random(200, 400);
+		float time = random / 100;
+		cell->lifeTime = time;
+		cells[(int)pos.y][(int)pos.x] = cell;
+	}
+	cell->active = true;
+	cell->model = UpdatedModel(pos);
+	activeCells.push_back(cell);
 	return cell;
 }
 void Grid::CreateCellsFromCircle(Circle* _circle, CellType _type) {
@@ -403,44 +264,28 @@ void Grid::CreateCellsFromCircle(Circle* _circle, CellType _type) {
 
 	for (int y = gridMin.y; y < gridMax.y; ++y) {
 		for (int x = gridMin.x; x < gridMax.x; ++x) {
+			if (!InBounds(x, y))
+				continue;
 			if (cells[y][x] == nullptr && pendingSpawns.size() < MAX_QUEUE)
 				pendingSpawns.push_back({ glm::ivec2(x,y),_type });
 		}
 	}
 
 }
-void Grid::WakeNeighbors(int x, int y)
-{
-	for (int dx = -5; dx <= 5; dx++)
-	{
-		for (int dy = 0; dy <= 5; dy++)
-		{
-			int nx = x + dx;
-			int ny = y + dy;
-			
-			if (InBounds(nx, ny))
-			{
-				if(cells[ny][nx] != nullptr)
-				if (cells[ny][nx]->cellType == sand && cells[ny][nx]->active == false) {
-					cells[ny][nx]->active = true;
-					activeCells.push_back(cells[ny][nx]);
-					cells[ny][nx]->unchangedFrames = 0;
-					int nny = ny + 1;
-					while (InBounds(nx, nny)) {
-						if (cells[nny][nx] != nullptr) {
-							if (cells[nny][nx]->active == false) {
-								cells[ny][nx]->active = true;
-								activeCells.push_back(cells[ny][nx]);
-								cells[ny][nx]->unchangedFrames = -10;
-							}
-						}
-						nny++;
-					}
-				}
-			}
+#pragma endregion
+#pragma region Cell Physics Helpers
+void Grid::WakeNeighbors(int x, int y) {
+	static const glm::ivec2 dirs[] = { {0,-1},{-1,-1},{1,-1} };
+	for (auto d : dirs) {
+		int nx = x + d.x, ny = y + d.y;
+		if (InBounds(nx, ny) && cells[ny][nx] && !cells[ny][nx]->active) {
+			cells[ny][nx]->active = true;
+			activeCells.push_back(cells[ny][nx]);
+			cells[ny][nx]->unchangedFrames = 0;
 		}
 	}
 }
+
 bool Grid::InBounds(int x, int y) {
 	if (x < 0 || y < 0)
 		return false;
@@ -455,44 +300,90 @@ bool Grid::MoveCell(glm::vec2 _newPos) {
 		return false;
 	return cells[_newPos.y][_newPos.x] == nullptr;
 }
-	//Updates our Sand Cell's model to translate it's position to simulate falling
-void Grid::UpdateSand(Cell* _cell) {
-	glm::vec2 newPos = _cell->GravityPos();
-	//Try fall
-	if (_cell->gridPosition.y >= cellAmount - 1) {
-		return;
-	}
-	if (MoveCell(newPos)) {
-		glm::mat4 model = _cell->UpdatedModel(newPos);
-		WakeNeighbors(_cell->gridPosition.x, _cell->gridPosition.y);
-		_cell->model = model;
-		cells[_cell->gridPosition.y][_cell->gridPosition.x] = nullptr;
-		_cell->gridPosition = newPos;
-		cells[newPos.y][newPos.x] = _cell;
-		_cell->unchangedFrames = 0;
-		return;
-	}
-	else {
-		//Try fall Diagnol
-		for (glm::vec2 _newPos : _cell->GravityDispersalPos()) {
-			if (MoveCell(_newPos)) {
-				WakeNeighbors(_cell->gridPosition.x, _cell->gridPosition.y);
-				cells[_cell->gridPosition.y][_cell->gridPosition.x] = nullptr;
-				glm::mat4 _model = _cell->UpdatedModel(_newPos);
-				_cell->model = _model;
-				_cell->gridPosition = _newPos;
-				cells[_newPos.y][_newPos.x] = _cell;
-				_cell->unchangedFrames = 0;
-				return;
-			}
-		}
-		_cell->unchangedFrames++;
-		if (_cell->unchangedFrames > 80)
-			_cell->active = false;
-	}
+	
+glm::mat4 Grid::UpdatedModel(glm::vec2 newPos) {
+	float cellNdcW = 2.0f / cellAmount;
+	float cellNdcH = 2.0f / cellAmount;
+
+	glm::vec2 ndc = GridToNdc(newPos, cellAmount);
+	glm::mat4 model = glm::mat4(1.0f);
+	glm::vec3 translation = glm::vec3(ndc.x, ndc.y, 0);
+	
+	model = glm::translate(glm::mat4(1.0f), translation);
+	model = glm::scale(model, glm::vec3(cellNdcW, cellNdcH, 1.0f));
+	return model;
 }
-void Grid::UpdateWood(Cell* _cell) {
-	_cell->active = false;
+//New pos = y+1, x, simulates the space right below our cell!
+glm::vec2 Grid::GravityPos(glm::vec2 gridPosition) {
+	int nGridPosY = gridPosition.y + 1;
+	int nGridPosX = gridPosition.x;
+	if (nGridPosY >= cellAmount)   // STOP at bottom
+		return gridPosition;
+	return glm::vec2(nGridPosX, nGridPosY);
+}
+vector<glm::vec2> Grid::GravityDispersalPos(glm::vec2 gridPosition) {
+	vector<glm::vec2> _vec2;
+	int nGridPosY = gridPosition.y + 1;
+	if (nGridPosY >= cellAmount) return _vec2;
+
+	int nGridPosX1 = gridPosition.x + 1;
+	int nGridPosX2 = gridPosition.x - 1;
+
+	if (gridPosition.y < cellAmount - 1)
+		_vec2.push_back(glm::vec2(nGridPosX1, nGridPosY));
+	if (gridPosition.x > 0)
+		_vec2.push_back(glm::vec2(nGridPosX2, nGridPosY));
+
+	return _vec2;
+}
+vector<glm::vec2> Grid::DispersalPos(glm::vec2 gridPosition, int leftRight)
+{
+	vector<glm::vec2> _vec2;
+	//Generate Right
+	int nGridPosX = gridPosition.x + 1;
+	if (nGridPosX < cellAmount)
+		_vec2.push_back(glm::vec2(nGridPosX, gridPosition.y));
+
+	//Generate Left
+	int nGridPosX2 = gridPosition.x - 1;
+	if (nGridPosX2 >= 0)
+		_vec2.push_back(glm::vec2(nGridPosX2, gridPosition.y));
+	vector<glm::vec2> _vec;
+	if (_vec2.size() == 2) {
+		if (leftRight == -1) {
+			_vec.push_back(_vec2[1]);
+			_vec.push_back(_vec2[0]);
+			return _vec;
+		}
+		else {
+			_vec.push_back(_vec2[0]);
+			_vec.push_back(_vec2[1]);
+			return _vec;
+		}
+
+	}
+	return _vec2;
+}
+
+void Grid::Move(Cell* c, glm::ivec2 newPos) {
+	cells[c->gridPosition.y][c->gridPosition.x] = nullptr;
+	c->gridPosition = newPos;
+	c->model = UpdatedModel(newPos);
+	cells[newPos.y][newPos.x] = c;
+}    
+bool Grid::IsBoxed(Cell* c) {
+	glm::ivec2 p = c->gridPosition;
+	return !MoveCell({ p.x,p.y + 1 }) && !MoveCell({ p.x,p.y - 1 }) && !MoveCell({ p.x - 1,p.y }) && !MoveCell({ p.x + 1,p.y });
+}
+int Grid::CountEmptyHoriz(glm::ivec2 pos, int dir) {
+	int count = 0;
+	while (true) {
+		pos.x += dir;
+		if (!InBounds(pos.x, pos.y)) break;
+		if (cells[pos.y][pos.x] != nullptr) break;
+		count++;
+	}
+	return count;
 }
 bool Grid::CheckNewFirePos(glm::vec2 _newPos) {
 	if (_newPos.x < 0 || _newPos.y < 0)
@@ -503,159 +394,287 @@ bool Grid::CheckNewFirePos(glm::vec2 _newPos) {
 		return false;
 	return cells[_newPos.y][_newPos.x]->cellType == wood;
 }
-void Grid::UpdateFire(Cell* _cell) {
-	//Calculate per frame chance to stop the fire based on one second percentage chance
-	_cell->lifeTime -= m_deltaTime;
-	if (_cell->lifeTime <= 0.0f) {
-		_cell->active = false;
-		cells[_cell->gridPosition.y][_cell->gridPosition.x] = nullptr;
-		WakeNeighbors(_cell->gridPosition.x, _cell->gridPosition.x);
-		return;
-	}
-	//All 8 cardinal directions n,nw,w,sw,se,e,ne 
-	vector<int> directions = {0,1,2,3};
-	int maxAttempts = 4;
-	int attempts = 0;
-	//Test all direction		
-	while (attempts < maxAttempts && !directions.empty()) {
-		//Try Spread
-
-			glm::vec2 gridVector = glm::vec2(0, 0);
-			switch (attempts) {
-				case 0:
-					gridVector = glm::vec2(0, 1);
-				break;
-				case 1:
-					gridVector = glm::vec2(1, 0);
-				break;
-				case 2:
-					gridVector = glm::vec2(0, -1);
-				break;
-				case 3:
-					gridVector = glm::vec2(-1, 0);
-				break;
-			}
-			glm::vec2 newGridPos = gridVector + _cell->gridPosition;
-			
-			if (CheckNewFirePos(newGridPos)) {
-				glm::mat4 model = _cell->UpdatedModel(newGridPos);
-				_cell->model = model;
-
-				
-				cells[newGridPos.y][newGridPos.x] = nullptr;
-				Cell* cell = CreateFireCell(newGridPos);
-				WakeNeighbors(newGridPos.x, newGridPos.y);
-				_cell->unchangedFrames = 0;
-				return;
-			}
-		
-		attempts++;
+void Grid::SwitchCellType(glm::vec2 _newPos, CellType type) {
+	cells[_newPos.y][_newPos.x]->cellType = type;
+	switch (type) {
+		case fire:
+			cells[_newPos.y][_newPos.x]->lifeTime = float(Random(250, 750)/100);
+			break;
 	}
 }
-void Grid::UpdateWater(Cell* _cell) {
-	glm::vec2 newPos = _cell->GravityPos();
+#pragma endregion
+#pragma region Cell Update Function
+//Updates our Sand Cell's model to translate it's position to simulate falling
+void Grid::UpdateSand(Cell* _cell) {
+	glm::vec2 newPos = GravityPos(_cell->gridPosition);
 	//Try fall
 	if (_cell->gridPosition.y >= cellAmount - 1) {
 		return;
 	}
 	if (MoveCell(newPos)) {
-		glm::mat4 model = _cell->UpdatedModel(newPos);
+		glm::mat4 model = UpdatedModel(newPos);
 		WakeNeighbors(_cell->gridPosition.x, _cell->gridPosition.y);
 		_cell->model = model;
 		cells[_cell->gridPosition.y][_cell->gridPosition.x] = nullptr;
 		_cell->gridPosition = newPos;
 		cells[newPos.y][newPos.x] = _cell;
+		_cell->unchangedFrames = 0;
 		return;
 	}
 	else {
 		//Try fall Diagnol
-		for (glm::vec2 _newPos : _cell->GravityDispersalPos()) {
+		for (glm::vec2 _newPos : GravityDispersalPos(_cell->gridPosition)) {
 			if (MoveCell(_newPos)) {
 				WakeNeighbors(_cell->gridPosition.x, _cell->gridPosition.y);
 				cells[_cell->gridPosition.y][_cell->gridPosition.x] = nullptr;
-				glm::mat4 _model = _cell->UpdatedModel(_newPos);
+				glm::mat4 _model = UpdatedModel(_newPos);
 				_cell->model = _model;
 				_cell->gridPosition = _newPos;
 				cells[_newPos.y][_newPos.x] = _cell;
+				_cell->unchangedFrames = 0;
 				return;
 			}
 		}
+		_cell->unchangedFrames++;
+		if (_cell->unchangedFrames > 120)
+			_cell->active = false;
 	}
-	//Try Left or Right
-	for (glm::vec2 _newPos : _cell->DispersalPos()) {
-		if (MoveCell(_newPos)) {
-			WakeNeighbors(_cell->gridPosition.x, _cell->gridPosition.y);
-			cells[_cell->gridPosition.y][_cell->gridPosition.x] = nullptr;
-			glm::mat4 _model = _cell->UpdatedModel(_newPos);
-			_cell->model = _model;
-			_cell->gridPosition = _newPos;
-			cells[_newPos.y][_newPos.x] = _cell;
-			return;
+}
+void Grid::UpdateWood(Cell* _cell) {
+
+}
+void Grid::UpdateFire(Cell* cell) {
+	static const glm::ivec2 dirs[4] = {
+		{0, 1}, {1, 0}, {0, -1}, {-1, 0}
+	};
+	cell->lifeTime -= m_deltaTime;
+
+	if (cell->lifeTime <= 0.0f) {
+		PendingCell pendingDeletion{
+			cell->gridPosition, fire
+		};
+		PendingCell pendingAshSpawn{
+			cell->gridPosition, ash
+		};
+		int smokingY = cell->gridPosition.y;
+		int increment = 0;
+		glm::vec2 newPos = glm::vec2(cell->gridPosition.x, smokingY);
+		while (!MoveCell(newPos) && increment < 20) {
+			newPos = glm::vec2(newPos.x, smokingY--);
+			increment++;
 		}
+		PendingCell pendingSmokeSpawn{
+			newPos, smoke
+		};
+		pendingCellDeletion.push_back(pendingDeletion);
+		pendingSpawns.push_back(pendingAshSpawn);
+		if(InBounds(newPos.x, newPos.y))
+			pendingSpawns.push_back(pendingSmokeSpawn);
+
+		WakeNeighbors(cell->gridPosition.x, cell->gridPosition.y);
+		return;
 	}
 
-	
+	for (int i = 0; i < 4; ++i) {
+		glm::ivec2 newPos = glm::ivec2(cell->gridPosition.x + dirs[i].x, cell->gridPosition.y + dirs[i].y);
+		if (CheckNewFirePos(newPos)) {
+			SwitchCellType(newPos, fire);
+			WakeNeighbors(newPos.x, newPos.y);
+			break; 
+		}
+	}
 }
-void Grid::CleanUp() {
-	activeCells.erase( std::remove_if(activeCells.begin(), activeCells.end(),[](Cell* c) { return !c->active; }), activeCells.end());
+void Grid::UpdateWater(Cell* c) {
+	glm::ivec2 pos = c->gridPosition;
+	while (true) {
+		glm::ivec2 below(pos.x, pos.y + 1);
+		if (!InBounds(below.x, below.y) || !MoveCell(below))
+			break;
+		Move(c, below);
+		pos = below;
+	}
+
+	int spreadDistance = 3; 
+	int dir = Random(0, 1) == 0 ? -1 : 1;
+
+	for (int i = 1; i <= spreadDistance; ++i) {
+		glm::ivec2 newPos(pos.x + i * dir, pos.y);
+		if (!InBounds(newPos.x, newPos.y) || !MoveCell(newPos))
+			break;
+		Move(c, newPos);
+	}
+
+	dir *= -1;
+	for (int i = 1; i <= spreadDistance; ++i) {
+		glm::ivec2 newPos(pos.x + i * dir, pos.y);
+		if (!InBounds(newPos.x, newPos.y) || !MoveCell(newPos))
+			break;
+	}
+
+	c->unchangedFrames++;
+	if (c->unchangedFrames > 250) 
+		c->active = false;
+
 }
+void Grid::UpdateSmoke(Cell* c) {
+	glm::ivec2 pos = c->gridPosition;
+	c->lifeTime -= m_deltaTime;
+
+	if (c->lifeTime <= 0.0f) {
+		PendingCell deletionCell{
+			pos, smoke
+		};
+		pendingCellDeletion.push_back(deletionCell);
+		return;
+	}
+	int up = 0, maxUp = 10;
+	while (up < maxUp) {
+		glm::ivec2 above(pos.x, pos.y -1);
+		if (!InBounds(above.x, above.y) || !MoveCell(above))
+			break;
+		Move(c, above);
+		pos = above;
+		up++;
+	}
+
+	int spreadDistance = 3;
+	int dir = Random(0, 1) == 0 ? -1 : 1;
+
+	for (int i = 1; i <= spreadDistance; ++i) {
+		glm::ivec2 newPos(pos.x + i * dir, pos.y);
+		if (!InBounds(newPos.x, newPos.y) || !MoveCell(newPos))
+			break;
+		Move(c, newPos);
+	}
+
+	dir *= -1;
+	for (int i = 1; i <= spreadDistance; ++i) {
+		glm::ivec2 newPos(pos.x + i * dir, pos.y);
+		if (!InBounds(newPos.x, newPos.y) || !MoveCell(newPos))
+			break;
+	}
+}
+
+#pragma endregion
+
+#pragma region Update
 void Grid::SpawnPendingCells() {
-	for (PendingCellSpawn pendingCell : pendingSpawns) {
+	for (PendingCell pendingCell : pendingSpawns) {
 		if (cells[pendingCell.pos.y][pendingCell.pos.x] == nullptr) {
 			CreateCell(pendingCell.pos, pendingCell.type);
 		}
 	}
 	pendingSpawns.clear();
 }
-
-//Draws our grid mesh, updates all active cells within the map, and spits out
+void Grid::DeletePendingCells(){
+	for (PendingCell pendingCell : pendingCellDeletion) {
+		Cell* cell = cells[pendingCell.pos.y][pendingCell.pos.x];
+		if (cell != nullptr) {
+			activeCells.erase(std::find(
+				activeCells.begin(),
+				activeCells.end(),
+				cell));
+			delete cell;
+			cells[pendingCell.pos.y][pendingCell.pos.x] = nullptr;
+		}
+	}
+	pendingCellDeletion.clear();
+}
+// --- Grid::Update() ---
 void Grid::Update() {
-	gridMesh.DrawMesh();
-	for (int y = cellAmount - 1; y >= 0; --y) {
-		for (int x = 0; x < cellAmount; ++x) {
-			Cell* c = cells[y][x];
-			if (!c || !c->active) continue;
-			switch (c->cellType) {
+	int random = -1;
+	for (Cell* c : activeCells) {
+		if (!c) continue;
+		if (!c->active) continue;
+
+		glm::ivec2 oldPos = c->gridPosition;
+
+		switch (c->cellType) {
 			case sand:
 				UpdateSand(c);
-				break;
-			case wood:
-				UpdateWood(c);
-				break;
-			case fire:
-				UpdateFire(c);
 				break;
 			case water:
 				UpdateWater(c);
 				break;
-			}
+			case fire:
+				random = Random(0, fireColors.size() - 1);
+				glm::vec4 color = fireColors[random];
+				c->color = color;
+				UpdateFire(c);
+				break;
+			case wood:
+				UpdateWood(c); // Sets active=false
+				break;
+			case ash:
+				UpdateSand(c);
+				break;
+			case smoke:
+				UpdateSmoke(c);
+				break;
 		}
 	}
-	SpawnPendingCells();
-	CleanUp();
+		DeletePendingCells();
+		SpawnPendingCells();
+		CleanUp(); // Removes inactive cells from activeCells list
 }
+void Grid::UpdateInstanceBuffers() {
+	instanceModels.clear();
+	instanceColors.clear();
+
+	for (int y = 0; y < cellAmount; y++) {
+		for (int x = 0; x < cellAmount; x++) {
+			Cell* c = cells[y][x];
+			if (!c) continue;
+
+			instanceModels.push_back(c->model);
+			instanceColors.push_back(c->color);
+		}
+	}
+
+	if (!instanceModels.empty()) {
+		SharedCellMesh::mesh->UpdateInstancedVBO(
+			instanceModels.data(), instanceModels.size(),
+			instanceColors.data(), instanceColors.size()
+		);
+	}
+}
+#pragma endregion
+// --- Grid::Draw(float deltaTime) ---
 void Grid::Draw(float deltaTime) {
 	m_deltaTime = deltaTime;
+
 	gridMesh.DrawMesh();
 	Update();
-	for (int y = cells.size() - 1; y >= 0; --y) {
-		for (int x = 0; x < cells[0].size(); x++) {
-			if (cells[y][x] == nullptr)
-				continue;
-			glm::mat4 model = cells[y][x]->UpdatedModel(cells[y][x]->gridPosition);
-			SharedCellMesh::shader->use();
-			SharedCellMesh::shader->setVec4("color", cells[y][x]->color);
-			SharedCellMesh::shader->setMat4("model", cells[y][x]->model);
-			cells[y][x]->Draw();
-		}
+	UpdateInstanceBuffers();
+	
+	if (SharedCellMesh::mesh && SharedCellMesh::shader && !instanceModels.empty()) {
+		SharedCellMesh::shader->use();
+		SharedCellMesh::mesh->DrawMeshInstanced(instanceModels.size());
 	}
 }
+
 void Grid::Delete() {
 	gridMesh.Delete();
 	gridShader.Delete();
-	cellShader.Delete();
-	for (Cell* _cell : activeCells) {
-		_cell->Delete();
-		delete _cell;
+
+	if (SharedCellMesh::mesh) {
+		SharedCellMesh::mesh->Delete();
+		delete SharedCellMesh::mesh;
+		SharedCellMesh::mesh = nullptr;
 	}
+	if (SharedCellMesh::shader) {
+		SharedCellMesh::shader->Delete();
+		delete SharedCellMesh::shader;
+		SharedCellMesh::shader = nullptr;
+	}
+
+	activeCells.clear();
+	for (int y = 0; y < cells.size(); ++y) {
+		cells[y].clear(); 
+	}
+	cells.clear();
 }
+void Grid::CleanUp() {
+	activeCells.erase( std::remove_if(activeCells.begin(), activeCells.end(),[](Cell* c) { return !c->active; }), activeCells.end());
+}
+

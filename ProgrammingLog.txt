@@ -1,6 +1,34 @@
+1/6/25
+    - Reorganized Grid.h, regioned off portions of the file
+    - Got Fire working
+    - Added Ash
+    - Added Smoke
+1/5/25
+    - Batch drawing of cells rather than individual cells holding location
+    - Moved functionality of cells to Grid for cleaner seperation of roles
+    - Made several init arguments structs, made their arguments actual variables instead of numbers like
+        cellAmount = 100; Grid(cellAmount) rather than passing 100 Grid(100)
+1/4/25
+    - Refactored more of Grid.h 
+        - Made cells structs instead of classes to match structure of other programmers projects
+        - Worked at sam's club making rotessorie chicken :)
+    - Refactored cleanup to not throw an error every time I close the sdl window
+1/3/25
+    - Changed from building at each frame to sending a batch of matrixes, and colors to decrease api calls
+    - Fixed Fire after it broke
+1/2/25
+    - Added water
+    - Optomized Water
+    - Tried 3 different water algorithms
+12/31/25 - 1/1/25
+    - Added Fire
+    - Added Cell Awakening
+    - Optomized Cell Awakening and sleeping
+    - Seperated all implementation from boilerplate .h files to .cpp files 
 12/28/25
     - Random Colors for variation in sand and wood
     - Added some Colors to the struct to be picked randomly from
+    - Started Refactoring .h files into .h, and cpp
 12/27/25
     - Fixed cell coloring per cell instead of per shader
 12/26/25

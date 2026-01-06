@@ -23,8 +23,10 @@ void InputHandler::update() {
     SDL_Event event;
 
     while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_EVENT_QUIT)
-            m_pGame->clean();
+        if (event.type == SDL_EVENT_QUIT) {
+            m_pGame->m_bRunning = false;
+            return;
+        }
 
 
         if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
@@ -50,6 +52,8 @@ void InputHandler::update() {
         spawningCellType = fire;
     if (isKeyDown(SDL_SCANCODE_4))
         spawningCellType = water;
+    if (isKeyDown(SDL_SCANCODE_5))
+        spawningCellType = smoke;
 }
 
 void InputHandler::clean() {

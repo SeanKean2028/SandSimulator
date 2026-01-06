@@ -1,16 +1,12 @@
 #include "Circle.h"
-Circle::Circle(glm::vec2 _center, float _radius, float _steps) {
-	radius = _radius;
-	amountOfSteps = _steps;
-
-	anglePerSteps = (2 * PI) / _steps;
-	GenerateCircle();
+Circle::Circle(circleInitArgs initArgs) {
+	init(initArgs);
 }
-void Circle::init(glm::vec2 _center, float _radius, float _steps) {
-	radius = _radius;
-	amountOfSteps = _steps;
+void Circle::init(circleInitArgs initArgs) {
+	radius = initArgs._radius;
+	amountOfSteps = initArgs._steps;
 
-	anglePerSteps = (2 * PI) / _steps;
+	anglePerSteps = (2 * PI) / amountOfSteps;
 	GenerateCircle();
 }
 //Helper function to add vertex to vertices list with only 4 parameter pos(vec2), texcoords(vec2)
@@ -44,10 +40,10 @@ void Circle::GenerateCircle() {
 		indices.push_back(j);
 		indices.push_back((j % amountOfSteps) + 1);
 	}
-	VertexShader vertexShader = VertexShader("Shaders/cellVertex.glsl", GL_VERTEX_SHADER);
-	FragmentShader fragmentShader = FragmentShader("Shaders/cellFragment.glsl", GL_FRAGMENT_SHADER);
+	VertexShader vertexShader = VertexShader("Shaders/boxVertex.glsl", GL_VERTEX_SHADER);
+	FragmentShader fragmentShader = FragmentShader("Shaders/boxFragment.glsl", GL_FRAGMENT_SHADER);
 	shaderProgram = ShaderProgram(vertexShader, fragmentShader);
-
+	
 	circleMesh = Mesh(vertices.data(), vertices.size(), indices.data(), indices.size(), shaderProgram);
 }
 void Circle::DrawCircle(glm::vec2 mousePos, glm::vec2 resolution) {

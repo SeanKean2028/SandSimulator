@@ -44,7 +44,6 @@ public:
 			std::cerr << "ERROR: Shader compilation failed ("
 				<< filePath << "):\n" << infoLog << std::endl;
 		}
-		cout << "Shader Compiled: " << filePath << endl;
 		return shader;
 	}
 	//Delete our shader

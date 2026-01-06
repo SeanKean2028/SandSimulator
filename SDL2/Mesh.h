@@ -21,20 +21,27 @@ class Mesh {
 	GLuint VAO,VBO,EBO = 0;
 	int* indices;
 	int indicesCount;
+	// --- New Instancing Buffers ---
+	GLuint instanceModelVBO = 0;
+	GLuint instanceColorVBO = 0;
 
 	Texture texture;
 	//Shader used to draw object
 	ShaderProgram shaderProgram;
-	//Indices Used
+		
 	void GenerateElementBufferObject();
-	//No Indices
 	void GenerateArrayObject();
 	void SetAttributePointers();
 public : 
 	Mesh();
+	Mesh(float* _vertices, int _vertexCount, ShaderProgram _shaderProgram);
+	Mesh(float* _vertices, int _vertexCount, int* _indices, int _indicesCount, ShaderProgram _shaderProgram, bool flag);
 	Mesh(float* _vertices, int _vertexCount, int* _indices, int _indicesCount, ShaderProgram _shaderProgram);
 
-	Mesh(float* _vertices, int _vertexCount, ShaderProgram _shaderProgram);
+	void UpdateInstancedVBO(glm::mat4* modelMatrices, int modelCount, glm::vec4* colors, int colorCount);
+	
 	void DrawMesh();
+	void DrawMeshInstanced(int instanceCount);
+	void SetInstancedAttributePointers();
 	void Delete();
 };

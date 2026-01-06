@@ -62,5 +62,8 @@
     <ClInclude Include="Game.h">
       <Filter>Header Files\Game</Filter>
     </ClInclude>
+    <ClInclude Include="Coordinate.h">
+      <Filter>Header Files\Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

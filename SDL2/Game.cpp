@@ -31,12 +31,12 @@ int SetUpWindow(SDL_Window* window, SDL_GLContext* glContext){
         return -1;
     }
 
-    cout << "OpenGL Version: " << glGetString(GL_VERSION) << endl;
+    std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << endl;
     return 0;
 }
 
 bool Game::init(GameInitArgs initArgs){
-    cout << "Initilizing Game \n";
+    std::cout << "Initilizing Game \n";
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         cerr << "SDL init failed: " << SDL_GetError() << endl;
         return false;
@@ -59,20 +59,27 @@ bool Game::init(GameInitArgs initArgs){
     );
 
     m_pContext = SDL_GL_CreateContext(m_pWindow);
-    cout << "Window Created \n";
+    std::cout << "Window Created \n";
     if (SetUpWindow(m_pWindow, &m_pContext) != 0)
         return false;
 
     m_bRunning = true;
-    
-    m_MouseCircle.init(glm::vec2(0, 0), 0.1f, 100);
-    m_Grid.init(gameArgs.width, gameArgs.height, 100);
+    float rad = 0.1f, steps = 100;
+    circleInitArgs _circleInitArgs{
+        rad,
+        steps
+    };
+    m_MouseCircle.init(_circleInitArgs);
+    int cellAmount = 100;
+    GridInitArgs gridInitArgs{
+        gameArgs.width, gameArgs.height, cellAmount
+    };
+    m_Grid.init(gridInitArgs);
 
     m_Grid.CreateCell(glm::vec2(2, 1), sand);
     m_Grid.CreateCell(glm::vec2(2, 2), sand);
     m_Grid.CreateCell(glm::vec2(2, 3), sand);
-    cout << "Creating Cells \n";
-    update();
+    std::cout << "Creating Cells \n";
     return true;
 }
 void Game::handleEvents(){
@@ -101,6 +108,8 @@ void Game::render(){
 
 void Game::update(){
     while (m_bRunning) {
+        if (m_bRunning == false)
+            return;
         Uint64 now = SDL_GetPerformanceCounter();
         float deltaTime =
             (now - m_lastCounter) /
@@ -116,10 +125,9 @@ void Game::update(){
 }
 void Game::clean(){
     m_bRunning = false;
-
     m_Grid.Delete();
     m_MouseCircle.Delete();
-
+    
     SDL_GL_DestroyContext(m_pContext);
     SDL_DestroyWindow(m_pWindow);
     SDL_Quit();
