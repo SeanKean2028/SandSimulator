@@ -13,6 +13,7 @@ public:
     void clean();
 
     bool mouseDown = false;
+    CellType spawningCellType = sand;
 
 private:
     InputHandler();
@@ -21,7 +22,6 @@ private:
     static InputHandler* s_pInstance;
     Game* m_pGame = nullptr;
     const bool* m_keyStates;
-    CellType spawningCellType = sand;
 
 };
 

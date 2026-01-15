@@ -42,6 +42,9 @@
     <ClCompile Include="Grid.cpp">
       <Filter>Header Files\Simulation</Filter>
     </ClCompile>
+    <ClCompile Include="Text.cpp">
+      <Filter>Header Files\Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Mesh.h">
@@ -63,6 +66,9 @@
       <Filter>Header Files\Game</Filter>
     </ClInclude>
     <ClInclude Include="Coordinate.h">
+      <Filter>Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Text.h">
       <Filter>Header Files\Rendering</Filter>
     </ClInclude>
   </ItemGroup>

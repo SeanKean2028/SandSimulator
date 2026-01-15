@@ -1,9 +1,10 @@
 #pragma once
 #include <SDL3/SDL.h>
 #include <iostream>
+#include <vector>
 #include "Grid.h"
-
 #include "Circle.h"
+#include "Text.h"
 using namespace std;
 struct GameInitArgs {
 	const char* title;
@@ -26,9 +27,9 @@ class Game {
 		Grid m_Grid;
 		Circle m_MouseCircle;
 		bool m_bRunning;
+		vector<Text*> texts;
+		ShaderProgram m_TextShader;
 
-
-	private:
 		SDL_Window* m_pWindow;
 		SDL_Renderer* m_pRenderer;
 		SDL_GLContext m_pContext = {};

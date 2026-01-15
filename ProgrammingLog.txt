@@ -1,26 +1,33 @@
-1/6/25
+1/13/26
+    - Added Text.h, and Text.cpp!
+1/8/26
+    - Water Optomization
+1/7/26
+    - Added Density
+    - Added Comments to my Grid.h header file
+1/6/26
     - Reorganized Grid.h, regioned off portions of the file
     - Got Fire working
     - Added Ash
     - Added Smoke
-1/5/25
+1/5/26
     - Batch drawing of cells rather than individual cells holding location
     - Moved functionality of cells to Grid for cleaner seperation of roles
     - Made several init arguments structs, made their arguments actual variables instead of numbers like
         cellAmount = 100; Grid(cellAmount) rather than passing 100 Grid(100)
-1/4/25
+1/4/26
     - Refactored more of Grid.h 
         - Made cells structs instead of classes to match structure of other programmers projects
         - Worked at sam's club making rotessorie chicken :)
     - Refactored cleanup to not throw an error every time I close the sdl window
-1/3/25
+1/3/26
     - Changed from building at each frame to sending a batch of matrixes, and colors to decrease api calls
     - Fixed Fire after it broke
-1/2/25
+1/2/26
     - Added water
     - Optomized Water
     - Tried 3 different water algorithms
-12/31/25 - 1/1/25
+12/31/25 - 1/1/26
     - Added Fire
     - Added Cell Awakening
     - Optomized Cell Awakening and sleeping

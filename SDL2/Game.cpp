@@ -1,12 +1,13 @@
 #include <iostream>
 #include <GL/glew.h>
 #include <SDL3/SDL.h>
+#include <string>
 
 #include "Game.h"
 #include "InputHandler.h"
 #include "Grid.h"
 #include "Circle.h"
-
+#include "Text.h"
 using namespace std;
 
 int SetUpWindow(SDL_Window* window, SDL_GLContext* glContext){
@@ -69,6 +70,9 @@ bool Game::init(GameInitArgs initArgs){
         rad,
         steps
     };
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     m_MouseCircle.init(_circleInitArgs);
     int cellAmount = 100;
     GridInitArgs gridInitArgs{
@@ -76,18 +80,48 @@ bool Game::init(GameInitArgs initArgs){
     };
     m_Grid.init(gridInitArgs);
 
+    std::cout << "Creating Cells \n";
     m_Grid.CreateCell(glm::vec2(2, 1), sand);
     m_Grid.CreateCell(glm::vec2(2, 2), sand);
     m_Grid.CreateCell(glm::vec2(2, 3), sand);
-    std::cout << "Creating Cells \n";
+    std::cout << "Generating Test Text \n";
+    
+    VertexShader textVertex("Shaders/textVertex.glsl", GL_VERTEX_SHADER);
+    FragmentShader textFragment("Shaders/textFragment.glsl", GL_FRAGMENT_SHADER);
+
+    m_TextShader = ShaderProgram(textVertex, textFragment);
+    glm::mat4 projection = glm::ortho(
+        0.0f,
+        (float)gameArgs.width,
+        0.0f,
+        (float)gameArgs.height
+    );
+
+    m_TextShader.use();
+    glUniform1i(
+        glGetUniformLocation(m_TextShader.ID, "text"),
+        0
+    );
+    glUniformMatrix4fv(
+        glGetUniformLocation(m_TextShader.ID, "projection"),
+        1,
+        GL_FALSE,
+        glm::value_ptr(projection)
+    );
+
+    string text = "Sean Rock's";
+    float x = 25, y = 100, scale = 1;
+    glm::vec3 color = glm::vec3(1, 0, 0);
+    const char* filePath = "Fonts/SuperMario256.ttf"; int fontSize = 80;
+    Text *testText = new Text(filePath, fontSize, m_TextShader, text, x, y, scale, color);
+    texts.push_back(testText);
+    
     return true;
 }
 void Game::handleEvents(){
     InputHandler::Instance()->update();
 }
-void Game::render(){
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+void Game::render() {
 
     glViewport(0, 0, gameArgs.width, gameArgs.height);
     glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
@@ -102,7 +136,36 @@ void Game::render(){
         glm::vec2((float)x, (float)y),
         glm::vec2(gameArgs.width, gameArgs.height)
     );
-
+    //Change text to = cellType
+    string changeTo = "";
+    switch (InputHandler::Instance()->spawningCellType)
+    {
+        case none:
+            changeTo = "none";
+            break;
+        case sand:
+            changeTo = "sand";
+            break;
+        case wood:
+            changeTo = "wood";
+            break;
+        case fire:
+            changeTo = "fire";
+            break;
+        case ash:
+            changeTo = "ash";
+            break;
+        case water:
+            changeTo = "water";
+            break;
+        case smoke:
+            changeTo = "smoke";
+            break;
+    }
+    texts[0]->text = changeTo;
+    for(int i = 0; i  < texts.size(); i++){
+        texts[i]->RenderText();
+    }
     SDL_GL_SwapWindow(m_pWindow);
 }
 
@@ -126,8 +189,7 @@ void Game::update(){
 void Game::clean(){
     m_bRunning = false;
     m_Grid.Delete();
-    m_MouseCircle.Delete();
-    
+    m_MouseCircle.Delete();   
     SDL_GL_DestroyContext(m_pContext);
     SDL_DestroyWindow(m_pWindow);
     SDL_Quit();
