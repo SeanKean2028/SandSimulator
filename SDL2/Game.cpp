@@ -8,6 +8,7 @@
 #include "Grid.h"
 #include "Circle.h"
 #include "Text.h"
+#include "Font.h"
 using namespace std;
 
 int SetUpWindow(SDL_Window* window, SDL_GLContext* glContext){
@@ -109,11 +110,14 @@ bool Game::init(GameInitArgs initArgs){
         glm::value_ptr(projection)
     );
 
+
     string text = "Sean Rock's";
     float x = 25, y = 100, scale = 1;
     glm::vec3 color = glm::vec3(1, 0, 0);
     const char* filePath = "Fonts/SuperMario256.ttf"; int fontSize = 80;
-    Text *testText = new Text(filePath, fontSize, m_TextShader, text, x, y, scale, color);
+    Font SuperMarioFont;
+    SuperMarioFont.LoadFont(fontSize, "SuperMario256", filePath);
+    Text *testText = new Text(filePath, fontSize, "SuperMario256", SuperMarioFont, m_TextShader, text, x, y, scale, color);
     texts.push_back(testText);
     
     return true;

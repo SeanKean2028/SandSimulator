@@ -5,77 +5,24 @@
 #include <iostream>
 #include <GL/glew.h>
 using namespace std;
-Text::Text(const char* _path, int _fontSize, ShaderProgram &_shader, string _text, float x, float y, float scale, glm::vec3 color): shader(_shader) {
+Text::Text(const char* _path, int _fontSize, string _fontName,Font &_Font, ShaderProgram &_shader, string _text, float x, float y, float scale, glm::vec3 color): shader(_shader) {
 	shader = _shader;
-	Init(_path, _fontSize, _shader, _text, x, y, scale, color);
+	Init(_path, _fontSize, _fontName, _Font, _shader, _text, x, y, scale, color);
 }
-void Text::Init(const char* _path, int _fontSize, ShaderProgram &_shader, string _text, float _x, float _y, float _scale, glm::vec3 _color) {
+void Text::Init(const char* _path, int _fontSize,string _fontName, Font& _Font, ShaderProgram &_shader, string _text, float _x, float _y, float _scale, glm::vec3 _color) {
 	path = _path;
 	fontSize = _fontSize;
 	text = _text;
 	x = _x;
 	y = _y;
+	fontName = _fontName;
 	scale = _scale;
 	color = _color;
-	LoadFont();
+	_font = _Font.GetFont(fontSize, fontName, path);
 	GenerateMesh();
 }
 void Text::SetString(string _text) {
 	text = _text;
-}
-void Text::LoadFont() {
-	cout << "Loading Font at: " << path << endl;
-	//Initialize FreeType Library
-	FT_Library ft;
-	if (FT_Init_FreeType(&ft)) 
-		cout << "Error::Freetype: Could not init FreeType Library \n";
-	//Initialize Font
-	FT_Face face;
-	if (FT_New_Face(ft, path, 0, &face))
-		cout << "Error::Freetype: Failed to load font \n";
-	//Width is dynamically set if width = 0 based on the height
-	FT_Set_Pixel_Sizes(face, 0, fontSize);
-	//Initialize each Char
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	for (unsigned char c = 0; c < 128; c++) {
-		//Load char glyph
-		if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
-			cout << "Error::Freetype: Failed to load char: " << c << endl;
-			continue;
-		}
-		//Generate Texture
-		unsigned int texture;
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexImage2D(
-			GL_TEXTURE_2D,
-			0,
-			GL_RED,
-			face->glyph->bitmap.width,
-			face->glyph->bitmap.rows,
-			0,
-			GL_RED,
-			GL_UNSIGNED_BYTE,
-			face->glyph->bitmap.buffer
-		);
-		//Set texture options
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//Store the char
-		Character character =
-		{
-			texture,
-			glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-			glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-			face->glyph->advance.x
-		};
-		Characters.insert(pair<char, Character>(c, character));
-	}
-	//Clean Up
-	FT_Done_Face(face);
-	FT_Done_FreeType(ft);
 }
 void Text::GenerateMesh() {
 	glGenVertexArrays(1, &VAO);
@@ -104,7 +51,7 @@ void Text::RenderText() {
 	float xposCursor = x;
 	float yposCursor = y;
 	for (c = text.begin(); c != text.end(); c++) {
-		Character ch = Characters[*c];
+		Character ch = _font.characterSizes.at(fontSize)[*c];
 
 		float xpos = xposCursor + ch.Bearing.x * scale;
 		float ypos = yposCursor - (ch.Size.y - ch.Bearing.y) * scale;

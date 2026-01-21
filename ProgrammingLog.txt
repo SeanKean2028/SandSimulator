@@ -1,5 +1,13 @@
+1/15/26 - 1/21/26
+    - Seperated Shader.h into two files: .h, .cpp
+    - Optomized Text.h into a Font class for loaded fonts, and a Text class for instantiated Text objects
+    - Optomized Text.cpp not recreating vertices every frame
+1/14/26
+    - First day of classes no work
 1/13/26
     - Added Text.h, and Text.cpp!
+    - Added Changing Text in input handler
+    - TypeFront Libraries added
 1/8/26
     - Water Optomization
 1/7/26

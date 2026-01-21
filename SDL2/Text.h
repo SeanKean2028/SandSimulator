@@ -2,15 +2,9 @@
 #include <glm.hpp>
 #include <map>
 #include <string>
+#include "Font.h"
 #include "Shader.h"
 using namespace std;
-struct Character {
-	unsigned int TextureID;
-	glm::ivec2 Size;
-	glm::ivec2 Bearing;
-	unsigned int Advanced;
-};
-
 class Text {
 	map<char, Character> Characters;
 	unsigned int VAO, VBO;
@@ -19,6 +13,8 @@ class Text {
 public:
 	ShaderProgram &shader;
 	string text;
+	string fontName;
+	font _font;
 	float x;
 	float y;
 	float scale;
@@ -33,7 +29,7 @@ public:
 	* 
 	* Returns: Set's all parameters in Text class
 	*/
-	Text(const char* _path, int _fontSize, ShaderProgram &_shader, string text, float x, float y, float scale, glm::vec3 color);
+	Text(const char* _path, int _fontSize, string _fontName, Font& _Font, ShaderProgram& _shader, string _text, float x, float y, float scale, glm::vec3 color);
 
 	/*@Brief: Calls Generate Font, and Generate Mesh. Use if needing to set param data
 	*
@@ -45,21 +41,17 @@ public:
 	*
 	* Returns: Set's class data
 	*/
-	void Init(const char* _path, int _fontSize, ShaderProgram &_shader, string text, float x, float y, float scale, glm::vec3 color);
+	void Init(const char* _path, int _fontSize, string _fontName, Font& _Font, ShaderProgram& _shader, string _text, float _x, float _y, float _scale, glm::vec3 _color);
 	
 	void SetString(string _text);
-
-	/*@Brief: Initializes Freetype, and Fotn
+	
+	/*@Brief: Gets our map<char, Character> from the Font class
 	* 
-	* Initializes FreeType directory, and Font structure.
-	* Creates a texture for each char from char 0 => 128.
-	* Creates the Character struct for our map.
-	* Sets our map of chars, and Charcters in text class. 
 	* 
-	* @Params: Class data must be initialized
-	* @Return: Sets map<char, Character> Characters in Text class
+	* 
+	* 
 	*/
-	void LoadFont();
+	font GetFont(Font& font) { return font.GetFont(fontSize, fontName, path);}
 
 	/*@Brief: Initializes our Mesh(VAO, VBO, Attribute Pointers)
 	*   
