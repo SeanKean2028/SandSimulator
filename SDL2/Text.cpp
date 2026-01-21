@@ -6,7 +6,6 @@
 #include <GL/glew.h>
 using namespace std;
 Text::Text(const char* _path, int _fontSize, string _fontName,Font &_Font, ShaderProgram &_shader, string _text, float x, float y, float scale, glm::vec3 color): shader(_shader) {
-	shader = _shader;
 	Init(_path, _fontSize, _fontName, _Font, _shader, _text, x, y, scale, color);
 }
 void Text::Init(const char* _path, int _fontSize,string _fontName, Font& _Font, ShaderProgram &_shader, string _text, float _x, float _y, float _scale, glm::vec3 _color) {
@@ -19,6 +18,8 @@ void Text::Init(const char* _path, int _fontSize,string _fontName, Font& _Font, 
 	scale = _scale;
 	color = _color;
 	_font = _Font.GetFont(fontSize, fontName, path);
+	if (_font == nullptr)
+		cout << "Failed Getting Font \n";
 	GenerateMesh();
 }
 void Text::SetString(string _text) {
@@ -40,42 +41,58 @@ void Text::GenerateMesh() {
 }
 
 void Text::RenderText() {
-	shader.use();
-	glUniform3f(glGetUniformLocation(shader.ID, "textColor"),
-		color.x, color.y, color.z);
-	glActiveTexture(GL_TEXTURE0);
-	glBindVertexArray(VAO);
+    if (!_font) return; // safety check
 
-	// iterate through all characters
-	string::const_iterator c;
-	float xposCursor = x;
-	float yposCursor = y;
-	for (c = text.begin(); c != text.end(); c++) {
-		Character ch = _font.characterSizes.at(fontSize)[*c];
+    shader.use();
+    glUniform3f(
+        glGetUniformLocation(shader.ID, "textColor"),
+        color.x, color.y, color.z
+    );
 
-		float xpos = xposCursor + ch.Bearing.x * scale;
-		float ypos = yposCursor - (ch.Size.y - ch.Bearing.y) * scale;
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(VAO);
 
-		float w = ch.Size.x * scale;
-		float h = ch.Size.y * scale;
+    float xposCursor = x;
+    float yposCursor = y;
 
-		float vertices[6][4] = {
-			{xpos,     ypos + h, 0.0f, 0.0f},
-			{xpos,     ypos,     0.0f, 1.0f},
-			{xpos + w, ypos,     1.0f, 1.0f},
+    // get glyph map ONCE
+    auto& sizeMap = _font->characterSizes.at(fontSize);
 
-			{xpos,     ypos + h, 0.0f, 0.0f},
-			{xpos + w, ypos,     1.0f, 1.0f},
-			{xpos + w, ypos + h, 1.0f, 0.0f}
-		};
+    for (char c : text) {
+        unsigned char glyph = static_cast<unsigned char>(c);
 
-		glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		xposCursor += (ch.Advanced >> 6) * scale;
-	}
-	glBindVertexArray(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+        auto it = sizeMap.find(glyph);
+        if (it == sizeMap.end())
+            continue; // skip unsupported glyphs safely
+
+        const Character& ch = it->second;
+
+        float xpos = xposCursor + ch.Bearing.x * scale;
+        float ypos = yposCursor - (ch.Size.y - ch.Bearing.y) * scale;
+
+        float w = ch.Size.x * scale;
+        float h = ch.Size.y * scale;
+
+        float vertices[6][4] = {
+            {xpos,     ypos + h, 0.0f, 0.0f},
+            {xpos,     ypos,     0.0f, 1.0f},
+            {xpos + w, ypos,     1.0f, 1.0f},
+
+            {xpos,     ypos + h, 0.0f, 0.0f},
+            {xpos + w, ypos,     1.0f, 1.0f},
+            {xpos + w, ypos + h, 1.0f, 0.0f}
+        };
+
+        glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        xposCursor += (ch.Advanced >> 6) * scale;
+    }
+
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }

@@ -14,7 +14,7 @@ public:
 	ShaderProgram &shader;
 	string text;
 	string fontName;
-	font _font;
+	font *_font;
 	float x;
 	float y;
 	float scale;
@@ -24,34 +24,36 @@ public:
 	* Generates and calls functions that generate all textures, 
 	* VAO, VBO, and attribute data.
 	* 
-	* Parameters: const char* _path to sont file, int fontsize for setting size of 
+	* Parameters: const char* _path to Font file, int fontsize for setting size of, string &_fontName for finding font in Font class, Font& _font fontClass, ShaderProgram& shader,
+	* string text actual text drawn, float x, float y for positioning, float scale, glm::vec3 color
 	* generated bitmap
 	* 
 	* Returns: Set's all parameters in Text class
 	*/
 	Text(const char* _path, int _fontSize, string _fontName, Font& _Font, ShaderProgram& _shader, string _text, float x, float y, float scale, glm::vec3 color);
 
-	/*@Brief: Calls Generate Font, and Generate Mesh. Use if needing to set param data
+	/*@Brief: Set's all variables in class, Gets font from inpt
 	*
-	* Set's path, and fontsize
+	* Gets Font from Font class
 	* Generates and calls functions that generate all textures,
 	* VAO, VBO, and attribute data.
 	*
-	* Parameters: path, and size must be set if using!
+	* Parameters: const char* _path to Font file, int fontsize for setting size of, string &_fontName for finding font in Font class, Font& _font fontClass, ShaderProgram& shader,
+	* string text actual text drawn, float x, float y for positioning, float scale, glm::vec3 color
+	* generated bitmap
 	*
-	* Returns: Set's class data
+	* Returns: Set's all parameters in Text class
 	*/
 	void Init(const char* _path, int _fontSize, string _fontName, Font& _Font, ShaderProgram& _shader, string _text, float _x, float _y, float _scale, glm::vec3 _color);
 	
 	void SetString(string _text);
 	
-	/*@Brief: Gets our map<char, Character> from the Font class
+	/*@Brief: Set's drawn text
 	* 
-	* 
-	* 
-	* 
+	* Paramaters: string _text 
+	* Returns: draws new text
 	*/
-	font GetFont(Font& font) { return font.GetFont(fontSize, fontName, path);}
+	font GetFont(Font& font) { return *font.GetFont(fontSize, fontName, path);}
 
 	/*@Brief: Initializes our Mesh(VAO, VBO, Attribute Pointers)
 	*   
