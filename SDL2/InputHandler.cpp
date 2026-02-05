@@ -24,19 +24,19 @@ void InputHandler::update() {
 
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_EVENT_QUIT) {
-            m_pGame->m_bRunning = false;
+            m_pGame->setRunning(false);
             return;
         }
 
 
         if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
-            m_pGame->m_Grid.CreateCellsFromCircle(
-                &m_pGame->m_MouseCircle, spawningCellType);
+            m_pGame->getGrid().CreateCellsFromCircle(
+                &m_pGame->getMouseCircle(), spawningCellType);
             mouseDown = true;
         }
         else if (mouseDown) {
-            m_pGame->m_Grid.CreateCellsFromCircle(
-                &m_pGame->m_MouseCircle, spawningCellType);
+            m_pGame->getGrid().CreateCellsFromCircle(
+                &m_pGame->getMouseCircle(), spawningCellType);
         }
 
         if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)

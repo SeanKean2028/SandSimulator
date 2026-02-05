@@ -6,11 +6,11 @@
 #include "Shader.h"
 using namespace std;
 class Text {
+private:
 	map<char, Character> Characters;
 	unsigned int VAO, VBO;
 	const char* path;
 	int fontSize;
-public:
 	ShaderProgram &shader;
 	string text;
 	string fontName;
@@ -19,6 +19,8 @@ public:
 	float y;
 	float scale;
 	glm::vec3 color;
+public:
+
 	/*@Brief: Initializes Text class calling all initalize funcs
 	*
 	* Generates and calls functions that generate all textures, 
@@ -73,4 +75,5 @@ public:
 	* Returns: None
 	*/
 	void RenderText();
+	void setText(string _text) { text = _text; }
 };

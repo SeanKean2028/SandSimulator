@@ -30,7 +30,7 @@ void Text::GenerateMesh() {
 	glGenBuffers(1, &VBO);
 	glBindVertexArray(VAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO); 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
 
 	glEnableVertexAttribArray(0);
@@ -45,7 +45,7 @@ void Text::RenderText() {
 
     shader.use();
     glUniform3f(
-        glGetUniformLocation(shader.ID, "textColor"),
+        glGetUniformLocation(shader.GetId(), "textColor"),
         color.x, color.y, color.z
     );
 

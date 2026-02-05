@@ -29,11 +29,13 @@ public:
 };
 
 class ShaderProgram {
-public : 
+private :
 	GLuint ID = 0;
+public : 
 	ShaderProgram();
 	ShaderProgram(VertexShader& vertexShader, FragmentShader& fragmentShader);
 	void use();
+	GLuint GetId() { return ID; }
 	//Sets bool uniform with name and value
 	void setBool(const std::string& name, bool value) const;
 	//Sets int uniform with name and value

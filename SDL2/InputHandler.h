@@ -4,6 +4,12 @@
 class Game;
 
 class InputHandler {
+private:
+    InputHandler();
+    ~InputHandler();
+    static InputHandler* s_pInstance;
+    Game* m_pGame = nullptr;
+    const bool* m_keyStates;
 public:
     static InputHandler* Instance();
 
@@ -15,14 +21,7 @@ public:
     bool mouseDown = false;
     CellType spawningCellType = sand;
 
-private:
-    InputHandler();
-    ~InputHandler();
 
-    static InputHandler* s_pInstance;
-    Game* m_pGame = nullptr;
-    const bool* m_keyStates;
 
 };
-
 typedef InputHandler TheInputHandler;

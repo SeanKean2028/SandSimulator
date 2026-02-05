@@ -13,6 +13,7 @@ struct circleInitArgs {
 	float _steps;
 };
 class Circle {
+private :
 	//Screen Space
 	int amountOfSteps;
 	float anglePerSteps;
@@ -24,9 +25,9 @@ class Circle {
 	glm::mat4 model;
 	Mesh circleMesh;
 	ShaderProgram shaderProgram;
-public :
 	float radius;
 	glm::vec2 pos;
+public :
 	Circle(){}
 	Circle(circleInitArgs);
 
@@ -37,5 +38,8 @@ public :
 	//Sets vertices, and indices generating using the fan method
 	void GenerateCircle();
 	void DrawCircle(glm::vec2 mousePos, glm::vec2 resolution);
+	glm::vec2 GetPos() { return pos; }
+	void SetRadius(float _radius) { radius = _radius;}
+	float GetRadius() { return radius; }
 	void Delete();
 };

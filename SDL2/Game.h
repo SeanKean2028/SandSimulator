@@ -13,16 +13,7 @@ struct GameInitArgs {
 	int flags;
 };
 class Game {
-	public :
-		Game() { cout << "Instantiating: Game \n"; }
-		~Game(){}
-		bool init(GameInitArgs initArgs);
-		void render();
-		void update();
-		void handleEvents();
-		void clean();
-		bool running() { return m_bRunning; }
-		float getDeltaTime() const { return m_deltaTime; }
+private: 
 		GameInitArgs gameArgs;
 		Grid m_Grid;
 		Circle m_MouseCircle;
@@ -35,4 +26,17 @@ class Game {
 		SDL_GLContext m_pContext = {};
 		float m_deltaTime = 0.0f;
 		Uint64 m_lastCounter = 0;
-};
+public:
+		Game() { cout << "Instantiating: Game \n"; }
+		~Game(){}
+		bool init(GameInitArgs initArgs);
+		void render();
+		void update();
+		void handleEvents();
+		void clean();
+		bool running() { return m_bRunning; }
+		float getDeltaTime() const { return m_deltaTime; }
+		void setRunning(bool state) { m_bRunning = state; }
+		Grid &getGrid() { return m_Grid; }
+		Circle &getMouseCircle() { return m_MouseCircle; }
+};	

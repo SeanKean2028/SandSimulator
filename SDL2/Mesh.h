@@ -11,6 +11,7 @@ struct Texture {
 	string path;
 };
 class Mesh {
+private:
 	//Holds vertex floats pos 3, normals 3, and texcoords 2
 	float* vertices;
 	//count of vertices

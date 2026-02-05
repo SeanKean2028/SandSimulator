@@ -25,7 +25,7 @@
 		CellType type;
 	};
 	struct Cell {
-	public:
+	private :
 		glm::vec2 gridPosition;
 		glm::vec2 ndc;
 	
@@ -43,10 +43,33 @@
 		bool active = true;
 		bool deleting = false;
 		bool moved = false;
+	public :
 		Cell(){}
 		Cell(glm::vec2 gridPos, int _cellAmount, glm::vec2 cellSize, glm::vec2 _resolution, CellType type);
-		
+	
+		float GetLifeTime() { return lifeTime; }
+		CellType GetCellType() { return cellType; }
 
+		bool GetFlamable() { return isSpreadedFire; }
+		bool GetActive() { return active; }
+		float GetUnchangedFrames() { return unchangedFrames; }
+		glm::vec2 GetGridPos() { return gridPosition; }
+		float GetDensity() { return density; }
+		bool GetMoved() { return moved; }
+		glm::mat4 GetModel() { return model; }
+		glm::vec4 GetColor() { return color; }
+
+		void SetGridPos(glm::vec2 _pos) { this->gridPosition = _pos; }
+		void SetLifeTime(float _lifeTime) { this->lifeTime = _lifeTime;}
+		void SetActive(bool _active) { this->active = _active; }
+		void SetModel(glm::mat4 _model) { this->model = _model; }
+		void SetUnchangedFrames(float _frames) { this->unchangedFrames = _frames; }
+		void SetCellType(CellType _cellType) { this->cellType = _cellType; }
+		void SetDensity(float _density) { this->density = _density; }
+		void SetMoved(bool _state) { this->moved = _state; }
+		void SetColor(glm::vec4 _color) { this->color = _color; }
+		void IncrementUnchangedFrames() { this->unchangedFrames++; }
+		void ChangeLifeTime(float _delta) { this->lifeTime += _delta; }
 		void Delete();
 	};
 	struct GridInitArgs {
@@ -58,7 +81,7 @@
 	class Grid {
 		vector<vector<Cell*>> cells;
 		vector<Cell*> activeCells;
-	public:
+	
 		ShaderProgram gridShader;
 		ShaderProgram cellShader;
 		Mesh gridMesh;
@@ -77,8 +100,9 @@
 		const int MAX_QUEUE = 555;
 		
 		float fireSpreadChance = 1.0f;
+		float m_deltaTime;
 		
-		
+	public:
 		//--- Instantiation
 		Grid();
 		Grid(GridInitArgs _gridInitArgs);
@@ -211,6 +235,4 @@
 		void DeletePendingCells();
 		void Draw(float deltaTime);
 		void Delete();
-	private:
-		float m_deltaTime;
 	};

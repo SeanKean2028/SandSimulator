@@ -1,3 +1,7 @@
+2/5/26
+    -Started Going through files to fix private, public distinction
+1/21/26 - 2/4/26
+    - Break classes started
 1/15/26 - 1/21/26
     - Seperated Shader.h into two files: .h, .cpp
     - Optomized Text.h into a Font class for loaded fonts, and a Text class for instantiated Text objects

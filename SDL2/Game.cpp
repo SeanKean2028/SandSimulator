@@ -100,11 +100,11 @@ bool Game::init(GameInitArgs initArgs){
 
     m_TextShader.use();
     glUniform1i(
-        glGetUniformLocation(m_TextShader.ID, "text"),
+        glGetUniformLocation(m_TextShader.GetId(), "text"),
         0
     );
     glUniformMatrix4fv(
-        glGetUniformLocation(m_TextShader.ID, "projection"),
+        glGetUniformLocation(m_TextShader.GetId(), "projection"),
         1,
         GL_FALSE,
         glm::value_ptr(projection)
@@ -166,7 +166,7 @@ void Game::render() {
             changeTo = "smoke";
             break;
     }
-    texts[0]->text = changeTo;
+    texts[0]->setText(changeTo);
     for(int i = 0; i  < texts.size(); i++){
         texts[i]->RenderText();
     }
