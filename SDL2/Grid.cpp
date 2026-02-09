@@ -701,8 +701,8 @@ void Grid::UpdateInstanceBuffers() {
 // --- Grid::Draw(float deltaTime) ---
 void Grid::Draw(float deltaTime) {
 	m_deltaTime = deltaTime;
-
-	gridMesh.DrawMesh();
+	//Grids buggy on my laptop :( TODO FIX GRID BUG	
+	//gridMesh.DrawMesh();
 	Update();
 	UpdateInstanceBuffers();
 	

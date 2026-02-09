@@ -128,7 +128,7 @@ void Game::handleEvents(){
 void Game::render() {
 
     glViewport(0, 0, gameArgs.width, gameArgs.height);
-    glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_CULL_FACE);
 
