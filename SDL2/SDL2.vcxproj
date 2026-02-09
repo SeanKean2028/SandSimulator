@@ -107,7 +107,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>\SDL2\\External\\SDL;../External//GLEW//glew-2.1.0/lib/Release/x64;..\External\\glm;..\External\\FreeType;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>\SDL2\\External\\SDL;../External//GLEW//glew-2.1.0/lib/;..\External\\glm;..\External\\FreeType;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL3.lib;opengl32.lib;glew32.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -124,7 +124,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>\SDL2\\External\\SDL;../External//GLEW//glew-2.1.0/lib/Release/x64;..\External\\glm;..\External\\FreeType;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>\SDL2\\External\\SDL;../External//GLEW//glew-2.1.0/lib/;..\External\\glm;..\External\\FreeType;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL3.lib;opengl32.lib;glew32.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
