@@ -110,6 +110,11 @@
       <AdditionalLibraryDirectories>..\\External\\SDL;../External//GLEW//glew-2.1.0/lib/;..\External\\glm;..\External\\FreeType;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL3.lib;opengl32.lib;glew32.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(ProjectDir)vendor\SDL3.dll"
+copy /Y "$(ProjectDir)vendor\glew32.dll"
+copy /Y "$(ProjectDir)vendor\freetype.dll"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -127,6 +132,11 @@
       <AdditionalLibraryDirectories>..\\External\\SDL;../External//GLEW//glew-2.1.0/lib/;..\External\\glm;..\External\\FreeType;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL3.lib;opengl32.lib;glew32.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(ProjectDir)vendor\SDL3.dll"
+copy /Y "$(ProjectDir)vendor\glew32.dll"
+copy /Y "$(ProjectDir)vendor\freetype.dll"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Circle.cpp" />
