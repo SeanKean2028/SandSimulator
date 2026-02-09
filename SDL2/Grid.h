@@ -117,7 +117,7 @@
 		*  @Return: pointer to the instantiated cell
 		*/
 		Cell* CreateCell(glm::vec2 pos, CellType type);
-		
+
 		/* @Brief: Initializes a collection of cells using a circles bounds
 		*
 		*  Create's Cells within the grid using the bounds of a circles radius
@@ -128,7 +128,7 @@
 		*/
 		void CreateCellsFromCircle(Circle* _circle, CellType _type);
 		//---
-		
+		void DeleteCellsFromCircle(Circle* _circle);
 		/* @Brief: Checks bound of passed ints in Grid
 		*
 		*  @Param: int x, int y flipped in cells[y][x]

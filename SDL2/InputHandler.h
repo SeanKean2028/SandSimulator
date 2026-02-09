@@ -1,8 +1,11 @@
 #pragma once
 #include <SDL3/SDL.h>
+#include <iostream>
+#include <vector>
 #include "Grid.h"
-class Game;
 
+class Game;
+using namespace std;
 class InputHandler {
 private:
     InputHandler();
@@ -18,10 +21,7 @@ public:
     bool isKeyDown(SDL_Scancode key);
     void clean();
 
-    bool mouseDown = false;
+    vector<bool> mouseDown = vector<bool>(3);
     CellType spawningCellType = sand;
-
-
-
 };
 typedef InputHandler TheInputHandler;

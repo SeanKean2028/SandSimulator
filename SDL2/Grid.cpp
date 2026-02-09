@@ -276,6 +276,28 @@ void Grid::CreateCellsFromCircle(Circle* _circle, CellType _type) {
 	}
 
 }
+void Grid::DeleteCellsFromCircle(Circle* _circle) {
+	glm::vec2 max = glm::vec2(_circle->GetPos().x + _circle->GetRadius(), _circle->GetPos().y + _circle->GetRadius());
+	glm::vec2 min = glm::vec2(_circle->GetPos().x - _circle->GetRadius(), _circle->GetPos().y - _circle->GetRadius());
+	ClampNdc(max);
+	ClampNdc(min);
+
+	glm::vec2 percentageOfGridMin = glm::vec2((min.x + 1) / 2, 1.0f - ((max.y + 1) / 2));
+	glm::vec2 percentageOfGridMax = glm::vec2((max.x + 1) / 2, 1.0f - ((min.y + 1) / 2));
+
+	glm::ivec2 gridMin = glm::vec2(cellAmount * percentageOfGridMin.x, cellAmount * percentageOfGridMin.y);
+	glm::ivec2 gridMax = glm::vec2(cellAmount * percentageOfGridMax.x, cellAmount * percentageOfGridMax.y);
+	for (int y = gridMin.y; y < gridMax.y; ++y) {
+		for (int x = gridMin.x; x < gridMax.x; ++x) {
+			if (!InBounds(x, y))
+				continue;
+			if (cells[y][x] != nullptr) {
+				pendingCellDeletion.push_back({ glm::ivec2(x,y) });
+			}
+		}
+	}
+
+}
 #pragma endregion
 #pragma region Cell Physics Helpers
 void Grid::WakeNeighbors(int x, int y) {
@@ -619,6 +641,7 @@ void Grid::DeletePendingCells() {
 
 		Cell* cell = cells[y][x];
 		if (cell != nullptr) {
+			WakeNeighbors(x, y);
 			auto it = std::find(activeCells.begin(), activeCells.end(), cell);
 			if (it != activeCells.end())
 				activeCells.erase(it);

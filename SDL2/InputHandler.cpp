@@ -1,4 +1,5 @@
 #include "InputHandler.h"
+#include <string>
 #include "Game.h"
 #include "Grid.h"
 InputHandler* InputHandler::s_pInstance = nullptr;
@@ -27,20 +28,29 @@ void InputHandler::update() {
             m_pGame->setRunning(false);
             return;
         }
-
-
-        if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
-            m_pGame->getGrid().CreateCellsFromCircle(
-                &m_pGame->getMouseCircle(), spawningCellType);
-            mouseDown = true;
-        }
-        else if (mouseDown) {
+        if (mouseDown[0]) {
             m_pGame->getGrid().CreateCellsFromCircle(
                 &m_pGame->getMouseCircle(), spawningCellType);
         }
-
+        if (mouseDown[1]) {
+            m_pGame->getGrid().DeleteCellsFromCircle(
+                &m_pGame->getMouseCircle());
+        }
+        if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ) {
+            if (static_cast<int>(event.button.button) == 1) {
+                m_pGame->getGrid().CreateCellsFromCircle(
+                    &m_pGame->getMouseCircle(), spawningCellType);
+                mouseDown[0] = true;
+            }
+            if (static_cast<int>(event.button.button) == 3) {
+                m_pGame->getGrid().DeleteCellsFromCircle(
+                    &m_pGame->getMouseCircle());
+                mouseDown[1] = true;
+            }
+        }
         if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
-            mouseDown = false;
+            for (int i = 0; i < mouseDown.size(); i++ )
+                mouseDown[i] = false;
     
     }
     m_keyStates = SDL_GetKeyboardState(nullptr);
