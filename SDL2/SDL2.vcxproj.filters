@@ -51,6 +51,9 @@
     <ClCompile Include="Font.cpp">
       <Filter>Header Files\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="Random.cpp">
+      <Filter>Header Files\Simulation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Mesh.h">
@@ -79,6 +82,9 @@
     </ClInclude>
     <ClInclude Include="Font.h">
       <Filter>Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Random.h">
+      <Filter>Header Files\Simulation</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

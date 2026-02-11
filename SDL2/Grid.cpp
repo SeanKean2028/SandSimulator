@@ -10,6 +10,7 @@
 #include "Circle.h"
 #include "Grid.h"
 #include "Coordinate.h"
+#include "Random.h"
 using namespace std;
 #pragma region Cell Mesh Data
 vector<float> vertices = {
@@ -81,7 +82,7 @@ vector<glm::vec4> smokeColors = {
 	glm::vec4(0,0,0,0.4f)
 };
 int densities[] = {
-	0, 3, 2, 0, 0,3,1
+	-1, 3, 2, -1, -1,3,0
 };
 #pragma endregion
 #pragma region SharedCellMesh
@@ -94,14 +95,6 @@ Mesh* SharedCellMesh::mesh = nullptr;
 ShaderProgram* SharedCellMesh::shader = nullptr;
 
 #pragma endregion
-//Todo: Make own header for importing Random int, Random float etc..
-int Random(int _min, int _max) {
-	random_device rd;
-	mt19937 gen(rd());
-	uniform_int_distribution<> dist(_min, _max);
-
-	return(dist(gen));
-}
 #pragma region Cell
 Cell::Cell(glm::vec2 gridPos, int _cellAmount, glm::vec2 cellSize, glm::vec2 _resolution, CellType type)
 {
@@ -111,21 +104,21 @@ Cell::Cell(glm::vec2 gridPos, int _cellAmount, glm::vec2 cellSize, glm::vec2 _re
 	int random2 = 0;
 	switch (cellType) {
 		case sand:
-			random = Random(0, sandColors.size() - 1);
+			random = Random::getInstance().GetRandomInt(0, sandColors.size() - 1);
 			color = sandColors[random];
 			break;
 		case wood:
-			random = Random(0, woodColors.size() - 1);
+			random = Random::getInstance().GetRandomInt(0, woodColors.size() - 1);
 			color = woodColors[random];
 			break;	
 		case fire:
-			random = Random(0, fireColors.size() - 1);
+			random = Random::getInstance().GetRandomInt(0, fireColors.size() - 1);
 			color = fireColors[random];
 			break;
 		case water:
-			random = Random(0, waterColors.size() - 1);
+			random = Random::getInstance().GetRandomInt(0, waterColors.size() - 1);
 			color = waterColors[random];
-			random2 = Random(1, 2);
+			random2 = Random::getInstance().GetRandomInt(1, 2);
 			
 			if (random2 == 1)
 				random = -1;
@@ -133,11 +126,11 @@ Cell::Cell(glm::vec2 gridPos, int _cellAmount, glm::vec2 cellSize, glm::vec2 _re
 				random = 1;
 			break;
 		case ash:
-			random = Random(0, ashColors.size() - 1);
+			random = Random::getInstance().GetRandomInt(0, ashColors.size() - 1);
 			color = ashColors[random];
 			break;
 		case smoke:
-			random = Random(0, smokeColors.size() - 1);
+			random = Random::getInstance().GetRandomInt(0, smokeColors.size() - 1);
 			color = smokeColors[random];
 			break;
 	}	
@@ -238,13 +231,13 @@ Cell* Grid::CreateCell(glm::vec2 pos, CellType type) {
 			cells[(int)pos.y][(int)pos.x] = cell;
 			return cell;
 		}
-		float random = Random(11, 90);
+		float random = Random::getInstance().GetRandomInt(11, 90);
 		float time = random / 100;
 		cell->SetLifeTime(time);
 		cells[(int)pos.y][(int)pos.x] = cell;
 	}
 	else if (cell->GetCellType() == smoke) {
-		float random = Random(200, 400);
+		float random = Random::getInstance().GetRandomInt(200, 400);
 		float time = random / 100;
 		cell->SetLifeTime(time);
 		cells[(int)pos.y][(int)pos.x] = cell;
@@ -423,12 +416,28 @@ bool Grid::CheckNewFirePos(glm::vec2 _newPos) {
 	return cells[_newPos.y][_newPos.x]->GetCellType()  == wood;
 }
 void Grid::SwitchCellType(glm::vec2 _newPos, CellType type) {
-	cells[_newPos.y][_newPos.x]->SetCellType(type);
+	Cell* c = cells[_newPos.y][_newPos.x];
+	c->SetCellType(type);
+	
+	int random;
+	glm::vec4 color;
 	switch (type) {
 		case fire:
-			cells[_newPos.y][_newPos.x]->SetLifeTime(float(Random(250, 750)/100));
+			c->SetLifeTime(float(Random::getInstance().GetRandomInt(250, 750)/100));
 			break;
+		case ash:
+			random = Random::getInstance().GetRandomInt(0, ashColors.size() - 1);
+			color = ashColors[random];
+			c->SetColor(color);
+		break;
+		case smoke:
+			random = Random::getInstance().GetRandomInt(0, smokeColors.size() - 1);
+			color = smokeColors[random];
+			c->SetColor(color);
+		break;
 	}
+	c->SetDensity(densities[type]);
+
 }
 void Grid::SwapCells(glm::vec2 p1, glm::vec2 p2)
 {
@@ -436,12 +445,15 @@ void Grid::SwapCells(glm::vec2 p1, glm::vec2 p2)
 	Cell*& b = cells[p2.y][p2.x];
 
 	if (!a || !b) return;
-	if (a->GetDensity() <= b->GetDensity()) return;
-	if (a->GetDensity() == 0 || b->GetDensity() == 0) return;
+	if (a->GetDensity() < 0 || b->GetDensity() < 0) return;
+	if (a->GetDensity() <= b->GetDensity() ){
+		SwapCells(p2,p1);
+		return;
+	}
 	std::swap(a, b);
 
 	WakeNeighbors(p1.x, p1.y);
-	// Update internal state (THIS WAS MISSING)
+
 	a->SetGridPos(p1);
 	b->SetGridPos(p2);
 
@@ -543,28 +555,55 @@ void Grid::UpdateFire(Cell* cell) {
 		}
 	}
 }
+vector<glm::ivec2> waterExtinguishDeltas = { {0,1},{1,0},{-1,0} };
 void Grid::UpdateWater(Cell* c) {
 	if (c->GetMoved() == true)
 		return;
 	c->SetMoved(true);
 	glm::ivec2 pos = c->GetGridPos();
-	while (true) {
-		glm::ivec2 below(pos.x, pos.y + 1);
-		if (!InBounds(below.x, below.y) || !MoveCell(below))
+
+	for (glm::ivec2 delta : waterExtinguishDeltas) {
+		glm::ivec2 checkPos = glm::ivec2(pos.x + delta.x, pos.y + delta.y);
+		if(InBounds(checkPos.x, checkPos.y))
+		if(cells[checkPos.y][checkPos.x] != nullptr)
+		if (cells[checkPos.y][checkPos.x]->GetCellType() == fire) {
+			SwitchCellType(pos, smoke);
+			SwitchCellType(checkPos, smoke);
+			return;
+		}
+	}
+	int i = 1, lim = 10;
+	while (i < 5) {
+		glm::ivec2 below(pos.x, pos.y + i);
+		if (!InBounds(below.x, below.y))
 			break;
-		Move(c, below);
-		pos = below;
-		WakeNeighbors(below.x, below.y);
+		if (MoveCell(below)) {
+			Move(c, below);
+			pos = below;
+			WakeNeighbors(below.x, below.y);	
+			return;
+		}
+		else if(cells[below.y][below.x] != nullptr) {
+			//Check Density
+			if (cells[below.y][below.x]->GetDensity() < c->GetDensity() && cells[below.y][below.x]->GetDensity() != -1) {
+				SwapCells(pos, below);
+				c->SetUnchangedFrames(0);
+				return;
+			}
+			
+		}
+		i++;
 	}
 	
 	int spreadDistance = 10; 
-	int dir = Random(0, 1) == 0 ? -1 : 1;
+	int dir = Random::getInstance().GetRandomInt(0, 1) == 0 ? -1 : 1;
 
 	for (int i = 1; i <= spreadDistance; ++i) {
 		glm::ivec2 newPos(pos.x + i * dir, pos.y);
 		if (!InBounds(newPos.x, newPos.y) || !MoveCell(newPos))
 			break;
 		Move(c, newPos);
+		pos = newPos;
 		WakeNeighbors(newPos.x, newPos.y);
 	}
 
@@ -573,6 +612,7 @@ void Grid::UpdateWater(Cell* c) {
 		glm::ivec2 newPos(pos.x + i * dir, pos.y);
 		if (!InBounds(newPos.x, newPos.y) || !MoveCell(newPos))
 			break;
+		pos = newPos;
 		WakeNeighbors(newPos.x, newPos.y);
 	}
 
@@ -606,7 +646,7 @@ void Grid::UpdateSmoke(Cell* c) {
 	}
 
 	int spreadDistance = 3;
-	int dir = Random(0, 1) == 0 ? -1 : 1;
+	int dir = Random::getInstance().GetRandomInt(0, 1) == 0 ? -1 : 1;
 
 	for (int i = 1; i <= spreadDistance; ++i) {
 		glm::ivec2 newPos(pos.x + i * dir, pos.y);
@@ -678,7 +718,7 @@ void Grid::Update() {
 				UpdateWater(c);
 				break;
 			case fire:
-				random = Random(0, fireColors.size() - 1);
+				random = Random::getInstance().GetRandomInt(0, fireColors.size() - 1);
 				glm::vec4 color = fireColors[random];
 				c->SetColor(color);
 				UpdateFire(c);

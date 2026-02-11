@@ -1,4 +1,5 @@
 #include "Mesh.h"
+#include <vector>
 Mesh::Mesh() {
 
 }
@@ -34,9 +35,16 @@ Mesh::Mesh(float* _vertices, int _vertexCount, int* _indices, int _indicesCount,
 	GenerateElementBufferObject();
 	SetAttributePointers();
 }
-
+void printFloats(const float* data, size_t count) {
+	for (size_t i = 0; i < count; ++i) {
+		std::cout << data[i] << endl;
+	}
+	std::cout << std::endl;
+}
 //Indices Used
 void Mesh::GenerateElementBufferObject() {
+	if (!vertices) std::cout << "vertices is null!\n";
+	if (!indices) std::cout << "indices is null!\n";
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
@@ -44,6 +52,10 @@ void Mesh::GenerateElementBufferObject() {
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	std::cout << "Total floats: " << vertexCount * floatsPerVertex << std::endl;
+	cout << "Generating Element Buffer Object vCount: " << vertexCount << " floatsPVertex: " << floatsPerVertex
+		<< " Vertices: \n";
+	printFloats(vertices, vertexCount);
 	glBufferData(GL_ARRAY_BUFFER, vertexCount * floatsPerVertex * sizeof(float), vertices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesCount * sizeof(unsigned int), indices, GL_STATIC_DRAW);
